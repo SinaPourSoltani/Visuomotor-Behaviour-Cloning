@@ -118,7 +118,5 @@ class Simulation:
     def step_to(self, x, y, z=0.775, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3,):
         motor_poses = self.robotId.move_to(x, y, z, ori, finger_angle)
         # print(motor_poses) # these are the angles of the joints.
-        p.stepSimulation()
-        time.sleep(1. / 240.)
 
 

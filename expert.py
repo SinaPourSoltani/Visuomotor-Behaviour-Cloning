@@ -59,7 +59,7 @@ class Expert:
             angle_poke = np.pi - angle_poke
             length = item.dim[2]
 
-        dist_center_to_border = length / np.cos(angle_poke)
+        dist_center_to_border = (length / 3) / np.cos(angle_poke)
         #print("dist", dist_center_to_border)
 
         # Normalize and multiply with calculated distance

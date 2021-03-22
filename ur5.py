@@ -2,8 +2,8 @@ import pybullet as p
 from simulation import *
 from expert import *
 import os
-from collections import  namedtuple
-from attrdict import  AttrDict
+from collections import namedtuple
+from attrdict import AttrDict
 
 def setup_sisbot(p, uid):
     controlJoints = ["shoulder_pan_joint","shoulder_lift_joint",
@@ -47,14 +47,10 @@ def load_arm_dim_up(arm, dim = 'Z'):
 class ur5:
 
     def __init__(self, urdfRootPath=pybullet_data.getDataPath()):
-
-
-
-        self.robotUrdfPath = "./urdf/real_arm.urdf"
+        self.robotUrdfPath = "objects/urdf/real_arm.urdf"
         self.robotStartPos = [0.0,0.0,0.0]
         self.robotStartOrn = p.getQuaternionFromEuler([1.885,1.786,0.132])
         self.tcpDefaultOri = p.getQuaternionFromEuler([ 0, 1/2*math.pi, 0]) # point the end effector downward
-
 
         self.xin = self.robotStartPos[0]
         self.yin = self.robotStartPos[1]
