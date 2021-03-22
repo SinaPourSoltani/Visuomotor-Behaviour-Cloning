@@ -34,6 +34,16 @@ def setup_sisbot(p, uid):
     mimicParentName = False
     return joints, controlRobotiqC2, controlJoints, mimicParentName
 
+def load_arm_dim_up(arm, dim = 'Z'):
+    arm = ur5()
+    if dim == 'Y':
+        arm_rot = p.getQuaternionFromEuler([-math.pi / 2, (1 / 2) * math.pi, 0])
+        arm.setPosition([0, -0.1, 0.5], [arm_rot[0], arm_rot[1], arm_rot[2], arm_rot[3]])
+    else:
+        arm_rot = p.getQuaternionFromEuler([0, 0, 0])#-1/2*math.pi])
+        arm.setPosition([-0.5, 0.0, 0.525], [arm_rot[0], arm_rot[1], arm_rot[2], arm_rot[3]])
+    return arm
+
 class ur5:
 
     def __init__(self, urdfRootPath=pybullet_data.getDataPath()):
@@ -43,6 +53,8 @@ class ur5:
         self.robotUrdfPath = "./urdf/real_arm.urdf"
         self.robotStartPos = [0.0,0.0,0.0]
         self.robotStartOrn = p.getQuaternionFromEuler([1.885,1.786,0.132])
+        self.tcpDefaultOri = p.getQuaternionFromEuler([ 0, 1/2*math.pi, 0]) # point the end effector downward
+
 
         self.xin = self.robotStartPos[0]
         self.yin = self.robotStartPos[1]
@@ -99,21 +111,16 @@ class ur5:
                                     targetVelocities=[0] * l, positionGains=[0.03] * l, forces=forces)
         # holy shit this is so much faster in arrayform!
 
-    def move_to(self, position_delta, mode='abs', noise=False, clip=False):
-
-        x = position_delta[0]
-        y = position_delta[1]
-        z = position_delta[2]
-
-        orn = position_delta[3:7]
-        finger_angle = position_delta[7]
-
+    def move_to(self, x, y, z, ori, finger_angle, useLimits = False):
+        # z 0.775 puts the tool relative close to the surface, when tool is turned 90 degrees around y-axis
+        ori = p.getQuaternionFromEuler(ori)
         # define our limits.
-        #z = max(0.14, min(0.7, z))
-        #x = max(-0.25, min(0.3, x))
-        #y = max(-0.4, min(0.4, y))
+        if useLimits:
+            z = max(0.14, min(0.7, z))
+            x = max(-0.25, min(0.3, x))
+            y = max(-0.4, min(0.4, y))
 
-        jointPose = list(p.calculateInverseKinematics(self.uid, self.endEffectorIndex, [x, y, z], orn))
+        jointPose = list(p.calculateInverseKinematics(self.uid, self.endEffectorIndex, [x, y, z], ori))
 
         jointPose[7] = -finger_angle / 25
         jointPose[6] = finger_angle / 25

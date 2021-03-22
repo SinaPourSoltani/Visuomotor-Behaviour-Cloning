@@ -4,17 +4,9 @@ import time
 import math
 import pybullet_data
 from utilities import *
-from ur5 import ur5
+from ur5 import load_arm_dim_up
 
-def load_arm_dim_up(arm, dim = 'Z'):
-    arm = ur5()
-    if dim == 'Y':
-        arm_rot = p.getQuaternionFromEuler([-math.pi / 2, (1 / 2) * math.pi, 0])
-        arm.setPosition([0, -0.1, 0.5], [arm_rot[0], arm_rot[1], arm_rot[2], arm_rot[3]])
-    else:
-        arm_rot = p.getQuaternionFromEuler([0, 0, 0])#-1/2*math.pi])
-        arm.setPosition([-0.5, 0.0, 0.525], [arm_rot[0], arm_rot[1], arm_rot[2], arm_rot[3]])
-    return arm
+
 
 class Simulation:
     def __init__(self):
@@ -38,6 +30,7 @@ class Simulation:
         self.proj_matrix = None
 
         self.setup_environment()
+        self.reset_environment()
 
     def setup_camera(self, cam_pos=[0, -1.5, 2], target_pos=[0, 0, 0.8], cam_up_pos=[0, 0, 1]):
         self.view_matrix = p.computeViewMatrix(cam_pos, target_pos, cam_up_pos)
@@ -75,17 +68,19 @@ class Simulation:
         p.setGravity(*self.gravity)
         p.setPhysicsEngineParameter(fixedTimeStep=self.time_step)
 
-        #p.setAdditionalSearchPath('./objects/')
         self.tableId = p.loadURDF("objects/table/table.urdf", [0, 0, 0])
-        #self.robotId = p.loadURDF("objects/ur3_with_gripper/ur3_with_gripper.urdf", [0, 0.4, 0.625], p.getQuaternionFromEuler([0, 0,-math.pi]))
-        #self.tableId = p.loadURDF("./objects/table/table.urdf", [0, 0, 0])
-        #self.robotId = p.loadURDF("kuka_iiwa/model_free_base.urdf", [0, 0.3, 0.625]) #, p.getQuaternionFromEuler([0, 0, math.pi]))
-        #self.robotId = p.loadURDF("urdf/real_arm.urdf", [0, 0.4, 0.525], p.getQuaternionFromEuler([0, 0, -1]))#2*math.pi]))
         self.robotId = load_arm_dim_up('ur5', dim='Z')
 
 
         self.set_random_object_and_goal()
         self.setup_camera(cam_pos=[0, -1.5, 2], target_pos=[0, 0, 0.8])
+
+    def reset_environment(self):
+        # reset the position of the robot
+        self.robotId.resetJointPoses()
+        for i in range(100):
+            p.stepSimulation()
+            time.sleep(self.time_step * 10)
 
     def grab_image(self, show=False):
         (_, _, px, _, _) = p.getCameraImage(self.px_width,self.px_height, self.view_matrix, self.proj_matrix)
@@ -120,8 +115,8 @@ class Simulation:
     def terminate(self):
         p.disconnect()
 
-    def step_to(self, action, abs_rel='abs', noise=False, clip=False):
-        motor_poses = self.robotId.move_to(action, abs_rel, noise, clip)
+    def step_to(self, x, y, z=0.775, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3,):
+        motor_poses = self.robotId.move_to(x, y, z, ori, finger_angle)
         # print(motor_poses) # these are the angles of the joints.
         p.stepSimulation()
         time.sleep(1. / 240.)
