@@ -4,39 +4,27 @@ from expert import *
 
 def main():
 
-    sim = Simulation()
+    n_steps = 10000
 
-    for i in range(10000):
+    sim = Simulation()
+    expert = Expert()
+    dataset = Dataset(n_steps)
+
+
+    for i in range(n_steps):
         sim.update_state()
         state = sim.get_state()
 
-        sim.step_to(0.0, -0.1)
 
-        # expert.update_item_and_goal(state.item, state.goal)
-        # poke = expert.calculate_poke()
+        poke = expert.calculate_poke2(state.item, state.goal)
+        dataset.add(state.image, poke, i)
 
         p.stepSimulation()
         time.sleep(sim.time_step)
 
     sim.terminate()
+    dataset.save_pokes()
 
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
