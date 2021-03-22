@@ -41,8 +41,8 @@ class Expert:
         item_up_dir = self.rotate_vector(np.asarray([0, item.dim[0]]), item_rot)
         angle_up_poke = self.angle_between_vectors(item_up_dir, poke_dir)
 
-        print(goal_dir)
-        print(item_up_dir)
+        #print(goal_dir)
+        #print(item_up_dir)
 
         threshold_angle = np.arctan2(item.dim[2], item.dim[0])
         angle_poke = angle_up_poke if angle_up_poke < np.pi else angle_up_poke - np.pi
@@ -60,12 +60,12 @@ class Expert:
             length = item.dim[2]
 
         dist_center_to_border = length / np.cos(angle_poke)
-        print("dist", dist_center_to_border)
+        #print("dist", dist_center_to_border)
 
         # Normalize and multiply with calculated distance
         poke_point_vector = (poke_dir / np.linalg.norm(poke_dir)) * dist_center_to_border
 
-        print("item pos", item.pos)
+        #print("item pos", item.pos)
         p.addUserDebugLine(item.pos, item.pos + [*item_up_dir, 0], [1,0,0], 1, 1)
         p.addUserDebugLine(item.pos, item.pos + [*goal_dir, 0], [1, 1, 1], 1, 1)
         p.addUserDebugLine(item.pos, item.pos + [*poke_point_vector, 0], [0, 0, 0], 1, 1)

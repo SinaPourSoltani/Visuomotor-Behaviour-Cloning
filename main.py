@@ -4,23 +4,24 @@ from expert import *
 
 
 def main():
+    n_steps = 10000
+
     sim = Simulation()
     expert = Expert()
+    dataset = Dataset(n_steps)
 
-    for i in range(10000):
+    for i in range(n_steps):
         sim.update_state()
         state = sim.get_state()
 
-        #p.setJointMotorControl2(bodyUniqueId=sim.robotId, jointIndex=1, controlMode=p.POSITION_CONTROL,
-        #                        targetPosition=2*math.pi, force=400)
-
         poke = expert.calculate_poke2(state.item, state.goal)
-        print("poke", poke)
+        dataset.add(state.image, poke, i)
 
         p.stepSimulation()
         time.sleep(sim.time_step / 10)
 
     sim.terminate()
+    dataset.save_pokes()
 
 
 if __name__ == '__main__':

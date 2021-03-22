@@ -26,3 +26,21 @@ class State:
     image: Image
     item: Item
     goal: Item
+
+
+class Dataset:
+    def __init__(self, steps):
+        self.steps = steps
+        self.pokes = np.empty((steps, 2))
+
+    def add(self, image: Image, poke: np.ndarray, idx):
+        # TODO: handle dynamic filepath given as argument
+        image.save('data/images/img' + str(idx).zfill(4) + '.png')
+        self.pokes[idx] = poke
+
+    def save_pokes(self):
+        # TODO: handle dynamic filepath given as argument
+        np.save('data/pokes.npy', self.pokes)
+
+
+
