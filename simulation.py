@@ -120,3 +120,4 @@ class Simulation:
         # print(motor_poses) # these are the angles of the joints.
 
 
+

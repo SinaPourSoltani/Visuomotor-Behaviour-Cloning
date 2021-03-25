@@ -2,8 +2,8 @@ import pybullet as p
 from simulation import *
 from expert import *
 
-
 def main():
+
     n_steps = 10000
 
     sim = Simulation()
@@ -17,13 +17,16 @@ def main():
         p.stepSimulation()
         time.sleep(0.02)
 
+
     for i in range(n_steps):
         sim.update_state()
         state = sim.get_state()
 
+
         poke = expert.calculate_poke2(state.item, state.goal)
         sim.step_to(*poke)
         #  dataset.add(state.image, poke, i)
+
 
         p.stepSimulation()
         time.sleep(sim.time_step)
