@@ -9,6 +9,13 @@ def main():
     sim = Simulation()
     expert = Expert()
     dataset = Dataset(n_steps)
+    sim.update_state()
+    state = sim.get_state()
+    #sim.step_to(*(state.item.pos-[0.2, 0]))
+    sim.step_to(-0.3, -0.15)
+    for i in range(100):
+        p.stepSimulation()
+        time.sleep(0.02)
 
     for i in range(n_steps):
         sim.update_state()

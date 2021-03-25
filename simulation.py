@@ -54,7 +54,7 @@ class Simulation:
 
         #constraints = [(-0.3, 0.3), (-0.3, 0.3), 0.6367, 0, 0, (-math.pi, math.pi)]
         object_constraints = [-0.1, -0.1, 0.6367, 0, 0, math.pi/4]
-        goal_constraints = [0.2, 0, 0.6251, 0, 0, 0]
+        goal_constraints = [0.2, -0.1, 0.6251, 0, 0, 0]
 
         object_pose = self.random_pose(constraints=object_constraints)
         goal_pose = self.random_pose(constraints=goal_constraints)
