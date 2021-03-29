@@ -1,4 +1,4 @@
-from utilities import *
+from utilities import Item
 import numpy as np
 import pybullet as p
 

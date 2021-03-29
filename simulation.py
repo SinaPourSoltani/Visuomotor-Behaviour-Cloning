@@ -5,7 +5,7 @@ import math
 import pybullet_data
 from utilities import *
 from ur5 import load_arm_dim_up
-from utilities import State
+#from utilities import State
 
 
 
@@ -79,7 +79,7 @@ class Simulation:
     def reset_environment(self):
         # reset the position of the robot
         self.robotArm.resetJointPoses()
-        for i in range(100):
+        for _ in range(100):
             p.stepSimulation()
             time.sleep(self.time_step * 10)
 
