@@ -5,6 +5,7 @@ import math
 import pybullet_data
 from utilities import *
 from ur5 import load_arm_dim_up
+from utilities import State
 
 
 
@@ -19,7 +20,7 @@ class Simulation:
 
         # Objects
         self.tableId = None
-        self.robotId = None
+        self.robotArm = None
         self.itemId = None
         self.goalId = None
 
@@ -69,7 +70,7 @@ class Simulation:
         p.setPhysicsEngineParameter(fixedTimeStep=self.time_step)
 
         self.tableId = p.loadURDF("objects/table/table.urdf", [0, 0, 0])
-        self.robotId = load_arm_dim_up('ur5', dim='Z')
+        self.robotArm = load_arm_dim_up('ur5', dim='Z')
 
 
         self.set_random_object_and_goal()
@@ -77,7 +78,7 @@ class Simulation:
 
     def reset_environment(self):
         # reset the position of the robot
-        self.robotId.resetJointPoses()
+        self.robotArm.resetJointPoses()
         for i in range(100):
             p.stepSimulation()
             time.sleep(self.time_step * 10)
@@ -114,10 +115,19 @@ class Simulation:
 
     def terminate(self):
         p.disconnect()
+        return 
 
-    def step_to(self, x, y, z=0.775, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3,):
-        motor_poses = self.robotId.move_to(x, y, z, ori, finger_angle)
-        # print(motor_poses) # these are the angles of the joints.
+    def step_simulation(self, sleep=True): 
+        p.stepSimulation()
+        if sleep: 
+            time.sleep(self.time_step)
+        return 
+
+    def step_robot_to(self, x, y, z=0.775, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3,):
+        self.robotArm.move_to(x, y, z, ori, finger_angle)
+        self.update_state()
+        return 
+
 
 
 
