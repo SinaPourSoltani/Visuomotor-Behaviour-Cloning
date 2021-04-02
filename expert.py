@@ -1,140 +1,145 @@
-from utilities import Item
+from utilities import Item, Geometry as geo
 import numpy as np
 import pybullet as p
 
 
-def dist(p1, p2):
-    return np.linalg.norm(p1 - p2)
+CALC_POKE = 101
+ASCEND = 102
+MOVE_APPROACH = 103
+DESCEND = 104
+ON_GOAL = 105
+
+state2str = {
+    CALC_POKE: "CALC_POKE",
+    ASCEND: "ASCEND",
+    MOVE_APPROACH: "MOVE_APPROACH",
+    DESCEND: "DESCEND",
+    ON_GOAL: "ON_GOAL",
+}
 
 
 class Expert:
     def __init__(self):
-        self.tcp_pose = None
-        self.item = None
-        self.goal = None
-        self.repositioning_tool = False
+        # State machine
+        self.STATE = CALC_POKE
+
+        # Geometry
+        self.tcp_pose = None    # TCP Pose [pos, ori]
+        self.item = None        # Of type Item from utilities
+        self.goal = None        # of type Item from utilities
+
+        self.goal_dir = None    # Direction of goal position wrt. item pos
+        self.poke_dir = None    # Direction of poke point wrt. item pos
+        self.tool_dir = None    # Direction of TCP wrt. item pos
+        self.poke_point = None  # Position of poke point wrt. world
+
+        # Thresholds
+        # TODO: Adjust/tune thresholds
+        self.safe_plane = 0.9
+        self.work_plane = 0.775
+
         self.tcp_poke_angle_threshold = np.pi / 6
         self.tcp_poke_dist_threshold = 0.01
-        self.step_size = 0.1       # length of step in meters
-        self.approach_dist = 0.03   # distance
-        self.work_plane = 0.775
-        self.safe_plane = 0.9
+        self.tcp_approach_dist_threshold = 0.03
+        self.item_goal_dist_threshold = 0.05
 
-    def update_state(self, tcp_pose, item: Item, goal: Item):
+        self.step_size = 0.1
+
+    def calculate_poke_point(self):
+        item_rot = p.getEulerFromQuaternion(self.item.ori)[2]
+
+        item_up_dir = geo.rotate_vector(np.asarray([0, self.item.dim[0]]), item_rot)
+        angle_up_poke = geo.angle_between_vectors(item_up_dir, self.poke_dir)
+
+        box_threshold_angle = np.arctan2(self.item.dim[2], self.item.dim[0])
+        angle_poke = angle_up_poke if angle_up_poke < np.pi else angle_up_poke - np.pi
+
+        # TODO: test if dim 0 and 2 are width and height respectively
+        length = self.item.dim[2]
+        if 0 <= angle_poke <= box_threshold_angle:
+            angle_poke = angle_poke
+            length = self.item.dim[2]
+        elif box_threshold_angle < angle_poke < np.pi - box_threshold_angle:
+            angle_poke = np.pi / 2 - angle_poke
+            length = self.item.dim[0]
+        elif np.pi - box_threshold_angle <= angle_poke <= np.pi:
+            angle_poke = np.pi - angle_poke
+            length = self.item.dim[2]
+
+        dist_center_to_border = (length / 5) / np.cos(angle_poke)
+        poke_point_vector = (self.poke_dir / np.linalg.norm(self.poke_dir)) * dist_center_to_border
+        return self.item.pos[0:2] + poke_point_vector
+
+    def update_geometry(self, tcp_pose, item: Item, goal: Item):
         self.tcp_pose = tcp_pose
         self.item = item
         self.goal = goal
 
-    def get_direction_vector(self, from_pos, to_pos):
-        dir_vec = to_pos - from_pos
-        unit_dir = dir_vec / np.linalg.norm(dir_vec)
-        return unit_dir
+        self.goal_dir = geo.get_direction_vector(self.item.pos, self.goal.pos)[0:2] # 2D (x, y)
+        self.poke_dir = geo.rotate_vector(self.goal_dir, np.pi)
+        self.tool_dir = geo.get_direction_vector(self.item.pos, self.tcp_pose[0])[0:2] # 2D (x, y)
+        self.poke_point = self.calculate_poke_point()
 
-    def rotate_vector(self, v, a):
-        return np.asarray([np.cos(a) * v[0] - np.sin(a) * v[1], np.sin(a) * v[0] + np.cos(a) * v[1]])
+    def calculate_move(self, tcp_pose, item: Item, goal: Item):
+        self.update_geometry(tcp_pose, item, goal)
 
-    def angle_between_vectors(self, v1, v2):
-        return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+        print(state2str.get(self.STATE, None))
 
-    # def between_points(point1, point2, point_to_check, max_deviation)
-    #     # calculate 
-    #     dist_to_line = 
+        if self.STATE == CALC_POKE:
+            move = np.asarray([*self.goal_dir, 0])
 
-    #     if dist_to_line > max_deviation: 
-    #         return False
-            
-    #     # calculate distance to the two points along the direction of the line using trigonometri for a 
-    #     dist_point1 = np.norm(point1 - point_to_check
-    #     dist_point2 = 
+            angle_tcp_poke = geo.angle_between_vectors(self.tool_dir, self.poke_point)
+            angle_tcp_poke = angle_tcp_poke if angle_tcp_poke < np.pi / 2 else np.pi - angle_tcp_poke
+            print("angle_tcp_poke", angle_tcp_poke * 180 / np.pi, angle_tcp_poke > self.tcp_poke_angle_threshold)
+            if angle_tcp_poke > self.tcp_poke_angle_threshold:
+                self.STATE = ASCEND
 
-    #     return True 
-    
+            if geo.dist(self.item.pos, self.goal.pos) <= self.item_goal_dist_threshold:
+                self.STATE = ON_GOAL
+                move = np.asarray([0, 0, 0])
 
-    def calculate_reposition(self, poke_point, poke_dir):
-        self.repositioning_tool = True
-        poke_point_approach = poke_point + poke_dir * self.approach_dist # poke_point points in the opposite direction of the poke (towards goal).
-        move = None
 
-        print("dist2poke", dist(self.tcp_pose[0][0:2], poke_point))
-        print("dist2appr", dist(self.tcp_pose[0][0:2], poke_point_approach))
+        elif self.STATE == ASCEND:
+            move = np.asarray([0, 0, 1])
 
-        if dist(self.tcp_pose[0][0:2], poke_point) > self.tcp_poke_dist_threshold and self.tcp_pose[0][2] < self.safe_plane:
-            print("ascend")
-            move =  np.asarray([0, 0, 1]) * self.step_size
-        elif dist(self.tcp_pose[0][0:2], poke_point_approach) < self.tcp_poke_dist_threshold and self.tcp_pose[0][2] > self.work_plane:
-            print("descend")
-            move = np.asarray([0, 0, -1]) * self.step_size
-        elif self.tcp_pose[0][2] >= self.safe_plane:
-            print("move to approach")
-            vector_step = self.get_direction_vector(self.tcp_pose[0][0:2], poke_point_approach) * self.step_size
+            print("tcp_z", self.tcp_pose[0][2], self.tcp_pose[0][2] >= self.safe_plane)
+            if self.tcp_pose[0][2] >= self.safe_plane:
+                self.STATE = MOVE_APPROACH
+
+
+        elif self.STATE == MOVE_APPROACH:
+            poke_point_approach = self.poke_point + self.poke_dir * self.tcp_approach_dist_threshold
+
+            vector_step = geo.get_direction_vector(self.tcp_pose[0][0:2], poke_point_approach)
             vector_all_the_way = poke_point_approach - self.tcp_pose[0][0:2]
 
-            if np.linalg.norm(vector_step) < np.linalg.norm(vector_all_the_way): 
-                move = vector_step
-            else:
-                move = vector_all_the_way
+            # Determine if approach is closer than a step size
+            move = vector_step if np.linalg.norm(vector_step) < np.linalg.norm(vector_all_the_way) else vector_all_the_way / self.step_size
             move = np.asarray([*move, 0])
-        
-        if dist(self.tcp_pose[0][0:2], poke_point_approach) < 0.001 and self.tcp_pose[0][2] <= self.work_plane:
-            print("reposition done")
-            self.repositioning_tool = False
-            
-        return move
 
-    def calculate_poke2(self, tcp_pose, item: Item, goal: Item):
-        # line between centers of gravity (item and goal)
-        # determine border of item
-        # determine pos of border furthest from goal that lies on line
-        # calculate unit step towards desired pos (x, y)
-        # return: x, y (relative step for tcp should be)
+            print("dist_tcp_approach_point", geo.dist(self.tcp_pose[0][0:2], poke_point_approach), geo.dist(self.tcp_pose[0][0:2], poke_point_approach) < self.tcp_approach_dist_threshold)
+            if geo.dist(self.tcp_pose[0][0:2], poke_point_approach) < self.tcp_approach_dist_threshold:
+                self.STATE = DESCEND
 
-        self.update_state(tcp_pose, item, goal)
 
-        goal_dir = self.get_direction_vector(item.pos, goal.pos)[0:2] # 2D (x, y)
-        poke_dir = self.rotate_vector(goal_dir, np.pi)
-        tool_dir = self.get_direction_vector(item.pos, tcp_pose[0])[0:2] # 2D (x, y)
+        elif self.STATE == DESCEND:
+            move = np.asarray([0, 0, -1])
 
-        item_rot = p.getEulerFromQuaternion(item.ori)[2]
+            print("tcp_z", self.tcp_pose[0][2], self.tcp_pose[0][2] <= self.work_plane)
+            if self.tcp_pose[0][2] <= self.work_plane:
+                self.STATE = CALC_POKE
 
-        item_up_dir = self.rotate_vector(np.asarray([0, item.dim[0]]), item_rot)
-        angle_up_poke = self.angle_between_vectors(item_up_dir, poke_dir)
 
-        box_threshold_angle = np.arctan2(item.dim[2], item.dim[0])
-        angle_poke = angle_up_poke if angle_up_poke < np.pi else angle_up_poke - np.pi
+        elif self.STATE == ON_GOAL:
+            move = np.asarray([0, 0, 0])
 
-        # test if dim 0 and 2 are width and height respectively
-        length = item.dim[2]
-        if 0 <= angle_poke <= box_threshold_angle:
-            angle_poke = angle_poke
-            length = item.dim[2]
-        elif box_threshold_angle < angle_poke < np.pi - box_threshold_angle:
-            angle_poke = np.pi / 2 - angle_poke
-            length = item.dim[0]
-        elif np.pi - box_threshold_angle <= angle_poke <= np.pi:
-            angle_poke = np.pi - angle_poke
-            length = item.dim[2]
+            print("dist_item_goal", geo.dist(self.item.pos, self.goal.pos), geo.dist(self.item.pos, self.goal.pos) > self.item_goal_dist_threshold)
+            if geo.dist(self.item.pos, self.goal.pos) > self.item_goal_dist_threshold:
+                self.STATE = CALC_POKE
 
-        dist_center_to_border = (length / 5) / np.cos(angle_poke)
-        #print("dist", dist_center_to_border)
-
-        # Normalize and multiply with calculated distance
-        poke_point_vector = (poke_dir / np.linalg.norm(poke_dir)) * dist_center_to_border
-
-        #print("item pos", item.pos)
-        p.addUserDebugLine(item.pos, item.pos + [*item_up_dir, 0], [1,0,0], 1, 2)
-        p.addUserDebugLine(item.pos, item.pos + [*goal_dir, 0], [1, 1, 1], 1, 2)
-        p.addUserDebugLine(item.pos, item.pos + [*poke_point_vector, 0], [0, 0, 0], 1, 2)
-
-        poke_point = item.pos[0:2] + poke_point_vector
-
-        if self.repositioning_tool:
-            return self.calculate_reposition(poke_point, poke_dir) if not None else np.asarray([*goal_dir, 0]) * self.step_size
-
-        # Only for test = #if dist(tcp_pose[0][0:2], poke_point) < self.tcp_poke_dist_threshold:
-        angle_tcp_poke = self.angle_between_vectors(tool_dir, poke_point)
-        angle_tcp_poke =  angle_tcp_poke if angle_tcp_poke < np.pi / 2 else np.pi - angle_tcp_poke
-        print("angle_tcp_poke", (angle_tcp_poke * 180)/np.pi, "repos", self.repositioning_tool)
-        if angle_tcp_poke < self.tcp_poke_angle_threshold: # and self.repositioning_tool == False
-            return np.asarray([*goal_dir, 0]) * self.step_size
         else:
-            return self.calculate_reposition(poke_point, poke_dir)
+            print("Something went wrong. STATE unknown.")
+
+        return move * self.step_size
+
+

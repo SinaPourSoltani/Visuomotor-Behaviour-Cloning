@@ -70,7 +70,23 @@ class Dataset:
         self.idx += 1
 
 
+class Geometry:
+    @staticmethod
+    def dist(p1, p2):
+        return np.linalg.norm(p1 - p2)
 
+    @staticmethod
+    def get_direction_vector(from_pos, to_pos):
+        dir_vec = to_pos - from_pos
+        unit_dir = dir_vec / np.linalg.norm(dir_vec)
+        return unit_dir
 
+    @staticmethod
+    def rotate_vector(v, a):
+        return np.asarray([np.cos(a) * v[0] - np.sin(a) * v[1], np.sin(a) * v[0] + np.cos(a) * v[1]])
+
+    @staticmethod
+    def angle_between_vectors(v1, v2):
+        return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
 
