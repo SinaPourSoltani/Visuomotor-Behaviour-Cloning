@@ -30,7 +30,7 @@ def setup_sisbot(p, uid):
         info = jointInfo(jointID,jointName,jointType,jointLowerLimit,
                          jointUpperLimit,jointMaxForce,jointMaxVelocity,controllable)
         if info.type=="REVOLUTE": # set revolute joint to static
-            p.setJointMotorControl2(uid, info.id, p.VELOCITY_CONTROL, targetVelocity=0, force=0)
+            p.setJointMotorControl2(uid, info.id, p.VELOCITY_CONTROL, targetVelocity=0)
         joints[info.name] = info
     controlRobotiqC2 = False
     mimicParentName = False
@@ -108,8 +108,7 @@ class ur5:
             forces.append(joint.maxForce)
         l = len(poses)
 
-        p.setJointMotorControlArray(self.uid, indexes, p.POSITION_CONTROL, targetPositions=poses,
-                                    targetVelocities=[0] * l, positionGains=[0.03] * l, forces=forces)
+        p.setJointMotorControlArray(self.uid, indexes, p.POSITION_CONTROL, targetPositions=poses)
         # holy shit this is so much faster in arrayform!
 
     def move_to(self, x, y, z, ori, finger_angle, useLimits = False):

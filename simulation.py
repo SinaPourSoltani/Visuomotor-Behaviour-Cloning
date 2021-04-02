@@ -81,7 +81,7 @@ class Simulation:
         self.robotArm.resetJointPoses()
         for _ in range(100):
             p.stepSimulation()
-            time.sleep(self.time_step * 10)
+            time.sleep(self.time_step)
 
     def grab_image(self, show=False):
         (_, _, px, _, _) = p.getCameraImage(self.px_width,self.px_height, self.view_matrix, self.proj_matrix)
