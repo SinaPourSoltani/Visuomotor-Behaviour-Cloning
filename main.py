@@ -26,29 +26,64 @@ def main(args=None):
     sim = Simulation()
     expert = Expert()
 
-    dataset = Dataset("data/test.npy", image_path="data/images/", filemode="w")
+    #dataset = Dataset("data/test.npy", image_path="data/images/", filemode="w")
     dataset = Dataset(args.data_file_name, image_path=args.image_path,  filemode=args.file_mode)
     sim.update_state()
     state = sim.get_state()
     #sim.step_to(*(state.item.pos-[0.2, 0])
 
+
+
+    print("Before stepping:")
+    tcp_pose = sim.robotArm.get_tcp_pose()
+    print(tcp_pose)
+
     sim.set_robot_pose(-0.3, -0.15)
+
+    print("After resetting:")
+    tcp_pose = sim.robotArm.get_tcp_pose()
+    print(tcp_pose)
+
     for _ in range(100):
+
+        sim.set_robot_pose(-0.3, -0.15)
         sim.step()
-    
+
+    #for _ in range(100):
+    #    sim.step()
+
+    print("After stepping:")
+    tcp_pose = sim.robotArm.get_tcp_pose()
+    print(tcp_pose)
+
+    sim.set_robot_pose_rel(-0.1, -0.1)
+    #for _ in range(100):
+    #    sim.set_robot_pose(-0.301, -0.151)
+    #    sim.step()
+
+    # for _ in range(100):
+    #    sim.step()
+
+    print("After stepping 2:")
+    tcp_pose = sim.robotArm.get_tcp_pose()
+    print(tcp_pose)
+
+    #while(True):
+    #    pass
 
     for i in range(n_steps):
         state = sim.get_state()
 
-        poke = expert.calculate_poke2(state.item, state.goal)
+        tcp_pose = sim.robotArm.get_tcp_pose()
+        poke = expert.calculate_poke2(tcp_pose, state.item, state.goal)
         dataset.add(state.image, poke, i)
-        sim.step_robot_to(*poke)
+        sim.set_robot_pose(*poke)
 
         tcp_pose = sim.robotArm.get_tcp_pose()
         sim.draw_coordinate_frame(*tcp_pose)
         poke = expert.calculate_poke2(tcp_pose, state.item, state.goal)
         print(tcp_pose[0], ' + ', poke)
-        
+
         #dataset.add(state.image, poke, i)
         sim.set_robot_pose(*poke, mode='rel')
 

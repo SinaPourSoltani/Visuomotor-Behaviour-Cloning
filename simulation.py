@@ -14,6 +14,8 @@ class Simulation:
         self.physicsClient = p.connect(p.GUI)
         self.state = None
 
+        self.p = p
+
         # Physics
         self.gravity = [0, 0, -9.82]
         self.time_step = 1./120.
@@ -132,6 +134,23 @@ class Simulation:
     def set_robot_pose(self, x, y, z=0.775, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3, mode='abs'):
         self.robotArm.move_to(x, y, z, ori, finger_angle, mode=mode)
         self.update_state()
+
+    def set_robot_pose_rel(self, x, y, z=0, ori=[ 0, 0, 0], finger_angle=1.3):
+
+        pose = self.robotArm.get_tcp_pose()
+        ori = p.getQuaternionFromEuler(ori)
+        tcp_x, tcp_y, tcp_z = pose[0]
+        x += tcp_x
+        y += tcp_y
+        z += tcp_z
+        ori += pose[1]
+
+        ori = p.getEulerFromQuaternion(ori)
+        for _ in range(100):
+            self.robotArm.move_to(x, y, z, ori, finger_angle)
+            self.step()
+        self.update_state()
+
 
 
 
