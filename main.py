@@ -1,14 +1,33 @@
 from simulation import Simulation
 from expert import Expert
 from utilities import Dataset
+import os 
+import sys
+import argparse
 
-def main():
+def parse_args(args): 
+    parser = argparse.ArgumentParser(description="Simple Script for generating training examples for a visuomotor task on a 2D-plane")
+    
+    parser.add_argument('--image_path', help="Path to where images should be saved", default="data/images/", type=str)
+    parser.add_argument('--file_mode', help="Mode of the data file w: create new file, potentially overwrite, a: append to file existing, x: only create file if it it does not exists",default="w" , type=str)
+    parser.add_argument('--data_file_name', help="Name of the file where tabular data is stored", default="test.npy", type=str)
+    return parser.parse_args(args)
+
+def main(args=None):
+
+    if args is None:
+        args = sys.argv[1:]
+    args = parse_args(args)
+
+    print("args", args)
 
     n_steps = 10000
 
     sim = Simulation()
     expert = Expert()
+
     dataset = Dataset("data/test.npy", image_path="data/images/", filemode="w")
+    dataset = Dataset(args.data_file_name, image_path=args.image_path,  filemode=args.file_mode)
     sim.update_state()
     state = sim.get_state()
     #sim.step_to(*(state.item.pos-[0.2, 0])
@@ -21,6 +40,10 @@ def main():
     for i in range(n_steps):
         state = sim.get_state()
 
+        poke = expert.calculate_poke2(state.item, state.goal)
+        dataset.add(state.image, poke, i)
+        sim.step_robot_to(*poke)
+
         tcp_pose = sim.robotArm.get_tcp_pose()
         sim.draw_coordinate_frame(*tcp_pose)
         poke = expert.calculate_poke2(tcp_pose, state.item, state.goal)
@@ -32,7 +55,7 @@ def main():
         sim.step(False)
 
     sim.terminate()
-   # dataset.save_pokes()
+
 
 
 if __name__ == '__main__':
