@@ -16,7 +16,7 @@ class Simulation:
 
         # Physics
         self.gravity = [0, 0, -9.82]
-        self.time_step = 1./240.
+        self.time_step = 1./120.
 
         # Objects
         self.tableId = None
@@ -81,7 +81,7 @@ class Simulation:
         self.robotArm.resetJointPoses()
         for _ in range(100):
             p.stepSimulation()
-            time.sleep(self.time_step * 10)
+            time.sleep(self.time_step)
 
     def grab_image(self, show=False):
         (_, _, px, _, _) = p.getCameraImage(self.px_width,self.px_height, self.view_matrix, self.proj_matrix)
@@ -115,18 +115,23 @@ class Simulation:
 
     def terminate(self):
         p.disconnect()
-        return 
 
-    def step_simulation(self, sleep=True): 
+    def draw_coordinate_frame(self, pos, ori=[0,0,0,1]):
+        rot = p.getMatrixFromQuaternion(ori)
+        colors = [(0,0,1), (0,1,0), (1,0,0)]
+        for i, el in enumerate(pos):
+            basis_vec = rot[i*3 : (i+1)*3]
+            coord_line = [a + b for a, b in zip(pos, basis_vec)]
+            p.addUserDebugLine(pos, coord_line, colors[i], 1, 2)
+
+    def step(self, sleep=True): 
         p.stepSimulation()
         if sleep: 
             time.sleep(self.time_step)
-        return 
 
-    def step_robot_to(self, x, y, z=0.775, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3,):
-        self.robotArm.move_to(x, y, z, ori, finger_angle)
+    def set_robot_pose(self, x, y, z=0.775, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3, mode='abs'):
+        self.robotArm.move_to(x, y, z, ori, finger_angle, mode=mode)
         self.update_state()
-        return 
 
 
 
