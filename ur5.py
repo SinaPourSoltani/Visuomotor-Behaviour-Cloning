@@ -1,5 +1,6 @@
 import pybullet as p
-from simulation import *
+import numpy as np
+import pybullet_data
 from expert import *
 import os
 
@@ -39,7 +40,7 @@ def setup_sisbot(p, uid):
 def load_arm_dim_up(arm, dim = 'Z'):
     arm = ur5()
     if dim == 'Y':
-        arm_rot = p.getQuaternionFromEuler([-math.pi / 2, (1 / 2) * math.pi, 0])
+        arm_rot = p.getQuaternionFromEuler([-np.pi / 2, (1 / 2) * np.pi, 0])
         arm.setPosition([0, -0.1, 0.5], [arm_rot[0], arm_rot[1], arm_rot[2], arm_rot[3]])
     else:
         arm_rot = p.getQuaternionFromEuler([0, 0, 0])#-1/2*math.pi])
@@ -54,7 +55,7 @@ class ur5:
 
         self.robotStartPos = [0.0,0.0,0.0]
         self.robotStartOrn = p.getQuaternionFromEuler([1.885,1.786,0.132])
-        self.tcpDefaultOri = p.getQuaternionFromEuler([ 0, 1/2*math.pi, 0]) # point the end effector downward
+        self.tcpDefaultOri = p.getQuaternionFromEuler([ 0, 1/2*np.pi, 0]) # point the end effector downward
 
 
         self.xin = self.robotStartPos[0]
@@ -111,9 +112,22 @@ class ur5:
         p.setJointMotorControlArray(self.uid, indexes, p.POSITION_CONTROL, targetPositions=poses)
         # holy shit this is so much faster in arrayform!
 
-    def move_to(self, x, y, z, ori, finger_angle, useLimits = False):
+    def get_tcp_pose(self):
+        (pos, ori, _, _, _, _) = p.getLinkState(self.uid, self.endEffectorIndex, computeForwardKinematics=1)
+        return np.asarray(pos), np.asarray(ori)
+
+    def move_to(self, x, y, z, ori, finger_angle, mode='abs', useLimits = False):
         # z 0.775 puts the tool relative close to the surface, when tool is turned 90 degrees around y-axis
         ori = p.getQuaternionFromEuler(ori)
+
+        if mode == 'rel':
+            pose = self.get_tcp_pose()
+            tcp_x, tcp_y, tcp_z = pose[0]
+            x += tcp_x
+            y += tcp_y
+            z += tcp_z
+            ori += pose[1]
+        
         # define our limits.
         if useLimits:
             z = max(0.14, min(0.7, z))
