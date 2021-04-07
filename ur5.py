@@ -108,9 +108,8 @@ class ur5:
             indexes.append(joint.id)
             forces.append(joint.maxForce)
         l = len(poses)
-
         p.setJointMotorControlArray(self.uid, indexes, p.POSITION_CONTROL, targetPositions=poses)
-        # holy shit this is so much faster in arrayform!
+
 
     def get_tcp_pose(self):
         (pos, ori, _, _, _, _) = p.getLinkState(self.uid, self.endEffectorIndex, computeForwardKinematics=1)
@@ -140,6 +139,8 @@ class ur5:
         jointPose[6] = finger_angle / 25
 
         self.action(jointPose)
+
+            #p.setJointMotorControlArray(self.uid, indexes, p.POSITION_CONTROL, targetPositions=poses)#,
         # print(jointPose)
         return jointPose
 
