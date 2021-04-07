@@ -41,6 +41,7 @@ class Expert:
         self.tcp_poke_angle_threshold = np.pi / 6
         self.tcp_poke_dist_threshold = 0.01
         self.tcp_approach_dist_threshold = 0.03
+        self.tcp_goal_line_dist_threshold = 0.10
         self.item_goal_dist_threshold = 0.05
 
         self.step_size = 0.1
@@ -88,10 +89,7 @@ class Expert:
         if self.STATE == CALC_POKE:
             move = np.asarray([*self.goal_dir, 0])
 
-            angle_tcp_poke = geo.angle_between_vectors(self.tool_dir, self.poke_point)
-            angle_tcp_poke = angle_tcp_poke if angle_tcp_poke < np.pi / 2 else np.pi - angle_tcp_poke
-            print("angle_tcp_poke", angle_tcp_poke * 180 / np.pi, angle_tcp_poke > self.tcp_poke_angle_threshold)
-            if angle_tcp_poke > self.tcp_poke_angle_threshold:
+            if geo.distance_to_line(self.tcp_pose[0][0:2], self.item.pos[0:2], self.goal_dir) > self.tcp_goal_line_dist_threshold or geo.dist(self.tcp_pose[0][0:2], self.goal.pos[0:2]) < geo.dist(self.item.pos[0:2], self.goal.pos[0:2]):
                 self.STATE = ASCEND
 
             if geo.dist(self.item.pos, self.goal.pos) <= self.item_goal_dist_threshold:
