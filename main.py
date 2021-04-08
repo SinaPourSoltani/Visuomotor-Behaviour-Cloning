@@ -43,10 +43,7 @@ def main(args=None):
     tcp_pose = sim.robotArm.get_tcp_pose()
     print(tcp_pose)
 
-    for _ in range(100):
-
-        sim.set_robot_pose(-0.3, -0.15)
-        sim.step()
+    sim.set_robot_pose(-0.3, -0.15)
 
 
     for i in range(n_steps):

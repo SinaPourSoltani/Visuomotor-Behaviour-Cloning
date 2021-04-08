@@ -89,4 +89,18 @@ class Geometry:
     def angle_between_vectors(v1, v2):
         return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
+    @staticmethod
+    def distance_to_line(origo, line_point, dir_vector):
+        # Handling both 2d and 3d vectors 
+        origo_copy = np.copy(origo)
+        origo_copy.resize(3)
+        line_point_copy = np.copy(line_point)
+        line_point_copy.resize(3)
+        dir_vector_copy = np.copy(dir_vector)
+        dir_vector_copy.resize(3)
+
+        m = line_point_copy - origo_copy
+        line_moment = np.cross(m, dir_vector_copy)
+        perpendicular_line_point = np.cross(dir_vector_copy, line_moment)
+        return Geometry.dist(perpendicular_line_point, origo_copy)
 
