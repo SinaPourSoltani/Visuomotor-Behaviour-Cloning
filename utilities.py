@@ -44,10 +44,10 @@ class Dataset:
             self.path_to_store_img = image_path
 
 
-        if file_name[-4:] == ".npy":
+        if file_name[-4:] == ".csv":
             self.file_name = file_name
         else: 
-            self.file_name = file_name + ".npy"
+            self.file_name = file_name + ".csv"
 
         try: 
             self.file = open(self.file_name, filemode)
@@ -66,7 +66,7 @@ class Dataset:
     def add(self, image: Image, poke: np.ndarray, idx):
         image_name = self.dataID + "_" + str(self.idx).zfill(4) + '.png'
         image.save(self.path_to_store_img + image_name)
-        self.file.write(image_name + ", " + str(poke[0]) + ", " + str(poke[1]) + "\n") 
+        self.file.write(image_name + ", " + str(poke[0]) + ", " + str(poke[1]) + ", " + str(poke[2]) + "\n") 
         self.idx += 1
 
 

@@ -10,7 +10,7 @@ def parse_args(args):
     
     parser.add_argument('--image_path', help="Path to where images should be saved", default="data/images/", type=str)
     parser.add_argument('--file_mode', help="Mode of the data file w: create new file, potentially overwrite, a: append to file existing, x: only create file if it it does not exists",default="w" , type=str)
-    parser.add_argument('--data_file_name', help="Name of the file where tabular data is stored", default="test.npy", type=str)
+    parser.add_argument('--data_file_name', help="Name of the file where tabular data is stored", default="test.csv", type=str)
     return parser.parse_args(args)
 
 def main(args=None):
@@ -54,7 +54,7 @@ def main(args=None):
         poke = expert.calculate_move(tcp_pose, state.item, state.goal)
         print(tcp_pose[0], ' + ', poke)
 
-        #dataset.add(state.image, poke, i)
+        dataset.add(state.image, poke, i)
         sim.set_robot_pose_rel(*poke)
 
         sim.step(False)
