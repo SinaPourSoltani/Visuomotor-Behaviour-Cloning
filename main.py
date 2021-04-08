@@ -29,22 +29,9 @@ def main(args=None):
     dataset = Dataset(args.data_file_name, image_path=args.image_path,  filemode=args.file_mode)
     sim.update_state()
     state = sim.get_state()
-    #sim.step_to(*(state.item.pos-[0.2, 0])
 
 
-
-    print("Before stepping:")
-    tcp_pose = sim.robotArm.get_tcp_pose()
-    print(tcp_pose)
-
-    sim.set_robot_pose(-0.3, -0.15)
-
-    print("After resetting:")
-    tcp_pose = sim.robotArm.get_tcp_pose()
-    print(tcp_pose)
-
-    sim.set_robot_pose(-0.3, -0.15)
-
+    sim.set_robot_pose(-0.25, -0.15, 0.775)
 
     for i in range(n_steps):
         state = sim.get_state()
@@ -55,7 +42,7 @@ def main(args=None):
         print(tcp_pose[0], ' + ', poke)
 
         #dataset.add(state.image, poke, i)
-        sim.set_robot_pose_rel(*poke)
+        sim.set_robot_pose(*poke, mode="rel", useLimits=True)
 
         sim.step(False)
 

@@ -35,16 +35,14 @@ class Expert:
 
         # Thresholds
         # TODO: Adjust/tune thresholds
-        self.safe_plane = 0.9
-        self.work_plane = 0.775
+        self.safe_plane = 0.85
+        self.work_plane = 0.8#0.775
 
-        self.tcp_poke_angle_threshold = np.pi / 6
-        self.tcp_poke_dist_threshold = 0.01
         self.tcp_approach_dist_threshold = 0.03
-        self.tcp_goal_line_dist_threshold = 0.10
+        self.tcp_goal_line_dist_threshold = 0.20
         self.item_goal_dist_threshold = 0.05
 
-        self.step_size = 0.1
+        self.step_size = 0.05
 
     def calculate_poke_point(self):
         item_rot = p.getEulerFromQuaternion(self.item.ori)[2]
