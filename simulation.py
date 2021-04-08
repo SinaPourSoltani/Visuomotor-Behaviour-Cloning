@@ -126,7 +126,7 @@ class Simulation:
             coord_line = [a + b for a, b in zip(pos, basis_vec)]
             p.addUserDebugLine(pos, coord_line, colors[i], 1, 2)
 
-    def step(self, sleep=True): 
+    def step(self, sleep=False): 
         p.stepSimulation()
         if sleep: 
             time.sleep(self.time_step)
