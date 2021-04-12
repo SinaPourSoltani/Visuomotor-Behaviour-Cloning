@@ -19,7 +19,7 @@ class Simulation:
         # Physics
         self.gravity = [0, 0, -9.82]
         self.move_precision = 0.001
-        self.time_step = 1./120.
+        self.time_step = 1./240.
 
         # Objects
         self.tableId = None

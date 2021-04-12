@@ -66,6 +66,7 @@ class Dataset:
     def add(self, image: Image, poke: np.ndarray, idx):
         image_name = self.dataID + "_" + str(self.idx).zfill(4) + '.png'
         image.save(self.path_to_store_img + image_name)
+        print("Image file name: ", image_name)
         self.file.write(image_name + ", " + str(poke[0]) + ", " + str(poke[1]) + ", " + str(poke[2]) + "\n") 
         self.idx += 1
 

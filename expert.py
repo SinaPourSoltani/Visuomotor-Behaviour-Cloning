@@ -42,7 +42,7 @@ class Expert:
         self.tcp_goal_line_dist_threshold = 0.4
         self.item_goal_dist_threshold = 0.05
 
-        self.step_size = 0.05
+        self.step_size = 0.01
 
     def calculate_poke_point(self):
         item_rot = p.getEulerFromQuaternion(self.item.ori)[2]
@@ -117,7 +117,8 @@ class Expert:
             vector_all_the_way = poke_point_approach - self.tcp_pose[0][0:2]
 
             # Determine if approach is closer than a step size
-            move = vector_step if np.linalg.norm(vector_step) < np.linalg.norm(vector_all_the_way) else vector_all_the_way / self.step_size
+            move = vector_step if np.linalg.norm(vector_step) < np.linalg.norm(vector_all_the_way) else vector_all_the_way
+            move = move/np.linalg.norm(move)
             move = np.asarray([*move, 0])
 
             print("dist_tcp_approach_point", geo.dist(self.tcp_pose[0][0:2], poke_point_approach), geo.dist(self.tcp_pose[0][0:2], poke_point_approach) < self.tcp_approach_dist_threshold)
