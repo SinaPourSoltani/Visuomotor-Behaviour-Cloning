@@ -1,6 +1,8 @@
 from utilities import Item, Geometry as geo
 import numpy as np
 import pybullet as p
+import math
+import random as rd
 
 
 CALC_POKE = 101
@@ -32,13 +34,14 @@ class Expert:
         self.poke_dir = None    # Direction of poke point wrt. item pos
         self.tool_dir = None    # Direction of TCP wrt. item pos
         self.poke_point = None  # Position of poke point wrt. world
+        self.angle = None
 
         # Thresholds
         # TODO: Adjust/tune thresholds
         self.safe_plane = 0.85
         self.work_plane = 0.8#0.775
 
-        self.tcp_approach_dist_threshold = 0.03
+        self.tcp_approach_dist_threshold = 0.03 #0.1
         self.tcp_goal_line_dist_threshold = 0.4
         self.item_goal_dist_threshold = 0.05
 
@@ -76,6 +79,7 @@ class Expert:
         self.goal = goal
 
         self.goal_dir = geo.get_direction_vector(self.item.pos, self.goal.pos)[0:2] # 2D (x, y)
+        self.angle = geo.angle_between_vectors([1,0],self.goal_dir)
         self.poke_dir = geo.rotate_vector(self.goal_dir, np.pi)
         self.tool_dir = geo.get_direction_vector(self.item.pos, self.tcp_pose[0])[0:2] # 2D (x, y)
         self.poke_point = self.calculate_poke_point()
@@ -148,6 +152,7 @@ class Expert:
         else:
             if self.verbose: print("Something went wrong. STATE unknown.")
 
-        return move * self.step_size
+        ori = np.asarray([0, 1/2*math.pi, math.pi - self.angle])
+        return np.concatenate((move *self.step_size, ori))
 
 

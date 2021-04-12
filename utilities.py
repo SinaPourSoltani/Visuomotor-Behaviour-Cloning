@@ -89,6 +89,10 @@ class Geometry:
         return np.asarray([np.cos(a) * v[0] - np.sin(a) * v[1], np.sin(a) * v[0] + np.cos(a) * v[1]])
 
     @staticmethod
+    def unit_vector(vector):
+        return vector / np.linalg.norm(vector)
+
+    @staticmethod
     def angle_between_vectors(v1, v2):
         return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 

@@ -40,7 +40,7 @@ def main(args=None):
         poke = expert.calculate_move(tcp_pose, state.item, state.goal)
         #print(tcp_pose[0], ' + ', poke)
 
-        dataset.add(state.image, poke, i)
+        #dataset.add(state.image, poke, i)
         sim.set_robot_pose(*poke, mode="rel", useLimits=True)
 
         sim.step(False)

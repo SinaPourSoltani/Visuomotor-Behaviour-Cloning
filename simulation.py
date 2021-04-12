@@ -71,7 +71,9 @@ class Simulation:
             print(goal_pose)
 
         self.goalId = p.loadURDF('objects/goal/lego.urdf', goal_pose[0], p.getQuaternionFromEuler(goal_pose[1]), globalScaling=3, useFixedBase=True)
+
         self.itemId = p.loadURDF('objects/lego/lego.urdf', object_pose[0], p.getQuaternionFromEuler(object_pose[1]), globalScaling=3)
+        #self.itemId = p.loadURDF('objects/cylinder/cylinder.urdf', object_pose[0], p.getQuaternionFromEuler(object_pose[1]), globalScaling=3)
 
     def setup_environment(self):
         p.setGravity(*self.gravity)
@@ -137,10 +139,10 @@ class Simulation:
         if sleep: 
             time.sleep(self.time_step)
 
-    def set_robot_pose(self, x, y, z, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3, mode='abs', precision=0.001, useLimits=False):
+    def set_robot_pose(self, x, y, z, ori_x=0, ori_y=1/2*math.pi, ori_z=0, finger_angle=1.3, mode='abs', precision=0.001, useLimits=False):
         i = 0
         max_sim_steps = 500
-        ori = p.getQuaternionFromEuler(ori)
+        ori = p.getQuaternionFromEuler([ori_x, ori_y, ori_z])
 
         if mode == 'rel':
             pose = self.robotArm.get_tcp_pose()
@@ -148,7 +150,7 @@ class Simulation:
             x += tcp_x
             y += tcp_y
             z += tcp_z
-            ori += pose[1]
+
 
         # define our limits.
         if useLimits:
