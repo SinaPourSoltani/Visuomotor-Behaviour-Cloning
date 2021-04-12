@@ -10,7 +10,7 @@ from ur5 import load_arm_dim_up
 
 
 class Simulation:
-    def __init__(self):
+    def __init__(self, verbose):
         self.physicsClient = p.connect(p.GUI)
         self.state = None
 
@@ -33,8 +33,12 @@ class Simulation:
         self.view_matrix = None
         self.proj_matrix = None
 
+        self.verbose = verbose
+
         self.setup_environment()
         self.reset_environment()
+
+
 
     def setup_camera(self, cam_pos=[0, -1.5, 2], target_pos=[0, 0, 0.8], cam_up_pos=[0, 0, 1]):
         self.view_matrix = p.computeViewMatrix(cam_pos, target_pos, cam_up_pos)
@@ -62,8 +66,9 @@ class Simulation:
 
         object_pose = self.random_pose(constraints=constraints)
         goal_pose = self.random_pose(constraints=constraints)
-        print(object_pose)
-        print(goal_pose)
+        if self.verbose:
+            print(object_pose)
+            print(goal_pose)
 
         self.goalId = p.loadURDF('objects/goal/lego.urdf', goal_pose[0], p.getQuaternionFromEuler(goal_pose[1]), globalScaling=3, useFixedBase=True)
         self.itemId = p.loadURDF('objects/lego/lego.urdf', object_pose[0], p.getQuaternionFromEuler(object_pose[1]), globalScaling=3)
@@ -73,7 +78,7 @@ class Simulation:
         p.setPhysicsEngineParameter(fixedTimeStep=self.time_step)
 
         self.tableId = p.loadURDF("objects/table/table.urdf", [0, 0, 0])
-        self.robotArm = load_arm_dim_up('ur5', dim='Z')
+        self.robotArm = load_arm_dim_up('ur5', self.verbose, dim='Z')
 
 
         self.set_random_object_and_goal()
@@ -151,14 +156,14 @@ class Simulation:
             # x = max(-0.25, min(0.3, x))
             # y = max(-0.4, min(0.4, y))
 
-        print("pos z: ", z)
+        if self.verbose: print("pos z: ", z)
         for i in range (max_sim_steps):
             #print("Current step: ", i + 1)
             pose = self.robotArm.get_tcp_pose()
             tcp_x, tcp_y, tcp_z = pose[0]
             dist = math.sqrt((x-tcp_x)**2 + (y-tcp_y)**2 + (z-tcp_z)**2)
             if dist < precision:
-                print("Pos reached! step: ", i)
+                if self.verbose: print("Pos reached! step: ", i)
                 break
             self.robotArm.move_to(x, y, z, ori, finger_angle)
             self.step(False)

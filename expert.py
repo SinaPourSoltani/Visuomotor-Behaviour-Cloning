@@ -19,7 +19,7 @@ state2str = {
 
 
 class Expert:
-    def __init__(self):
+    def __init__(self, verbose):
         # State machine
         self.STATE = CALC_POKE
 
@@ -43,6 +43,7 @@ class Expert:
         self.item_goal_dist_threshold = 0.05
 
         self.step_size = 0.01
+        self.verbose = verbose
 
     def calculate_poke_point(self):
         item_rot = p.getEulerFromQuaternion(self.item.ori)[2]
@@ -82,7 +83,7 @@ class Expert:
     def calculate_move(self, tcp_pose, item: Item, goal: Item):
         self.update_geometry(tcp_pose, item, goal)
 
-        print(state2str.get(self.STATE, None))
+        if self.verbose: print(state2str.get(self.STATE, None))
 
         if self.STATE == CALC_POKE:
             move = np.asarray([*self.goal_dir, 0])
@@ -92,10 +93,13 @@ class Expert:
             item_goal_dist = geo.dist(self.item.pos[0:2], self.goal.pos[0:2])
             tcp_item_dist = geo.dist(self.tcp_pose[0][0:2], self.item.pos[0:2])
 
-            print("dist_line", tcp_goal_line_dist, "thresh", self.tcp_goal_line_dist_threshold, "bool", tcp_goal_line_dist > self.tcp_goal_line_dist_threshold)
-            print("tcp2goal", tcp_goal_dist, "item2goal", item_goal_dist, "bool", tcp_goal_dist < item_goal_dist)
+
+            if self.verbose:
+                print("dist_line", tcp_goal_line_dist, "thresh", self.tcp_goal_line_dist_threshold, "bool", tcp_goal_line_dist > self.tcp_goal_line_dist_threshold)
+                print("tcp2goal", tcp_goal_dist, "item2goal", item_goal_dist, "bool", tcp_goal_dist < item_goal_dist)
 
             if tcp_goal_line_dist > self.tcp_goal_line_dist_threshold or tcp_goal_dist < item_goal_dist or tcp_goal_dist < tcp_item_dist:
+
                 self.STATE = ASCEND
 
             if geo.dist(self.item.pos, self.goal.pos) <= self.item_goal_dist_threshold:
@@ -106,7 +110,8 @@ class Expert:
         elif self.STATE == ASCEND:
             move = np.asarray([0, 0, 1])
 
-            print("tcp_z", self.tcp_pose[0][2], self.tcp_pose[0][2] >= self.safe_plane)
+            if self.verbose: print("tcp_z", self.tcp_pose[0][2], self.tcp_pose[0][2] >= self.safe_plane)
+
             if self.tcp_pose[0][2] >= self.safe_plane:
                 self.STATE = MOVE_APPROACH
 
@@ -122,7 +127,8 @@ class Expert:
             move = move/np.linalg.norm(move)
             move = np.asarray([*move, 0])
 
-            print("dist_tcp_approach_point", geo.dist(self.tcp_pose[0][0:2], poke_point_approach), geo.dist(self.tcp_pose[0][0:2], poke_point_approach) < self.tcp_approach_dist_threshold)
+            if self.verbose: print("dist_tcp_approach_point", geo.dist(self.tcp_pose[0][0:2], poke_point_approach), geo.dist(self.tcp_pose[0][0:2], poke_point_approach) < self.tcp_approach_dist_threshold)
+
             if geo.dist(self.tcp_pose[0][0:2], poke_point_approach) < self.tcp_approach_dist_threshold:
                 self.STATE = DESCEND
 
@@ -130,7 +136,7 @@ class Expert:
         elif self.STATE == DESCEND:
             move = np.asarray([0, 0, -1])
 
-            print("tcp_z", self.tcp_pose[0][2], self.tcp_pose[0][2] <= self.work_plane)
+            if self.verbose: print("tcp_z", self.tcp_pose[0][2], self.tcp_pose[0][2] <= self.work_plane)
             if self.tcp_pose[0][2] <= self.work_plane:
                 self.STATE = CALC_POKE
 
@@ -138,12 +144,12 @@ class Expert:
         elif self.STATE == ON_GOAL:
             move = np.asarray([0, 0, 0])
 
-            print("dist_item_goal", geo.dist(self.item.pos, self.goal.pos), geo.dist(self.item.pos, self.goal.pos) > self.item_goal_dist_threshold)
+            if self.verbose: print("dist_item_goal", geo.dist(self.item.pos, self.goal.pos), geo.dist(self.item.pos, self.goal.pos) > self.item_goal_dist_threshold)
             if geo.dist(self.item.pos, self.goal.pos) > self.item_goal_dist_threshold:
                 self.STATE = CALC_POKE
 
         else:
-            print("Something went wrong. STATE unknown.")
+            if self.verbose: print("Something went wrong. STATE unknown.")
 
         return move * self.step_size
 

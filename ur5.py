@@ -37,8 +37,8 @@ def setup_sisbot(p, uid):
     mimicParentName = False
     return joints, controlRobotiqC2, controlJoints, mimicParentName
 
-def load_arm_dim_up(arm, dim = 'Z'):
-    arm = ur5()
+def load_arm_dim_up(arm, verbose, dim = 'Z'):
+    arm = ur5(verbose)
     if dim == 'Y':
         arm_rot = p.getQuaternionFromEuler([-np.pi / 2, (1 / 2) * np.pi, 0])
         arm.setPosition([0, -0.1, 0.5], [arm_rot[0], arm_rot[1], arm_rot[2], arm_rot[3]])
@@ -49,7 +49,7 @@ def load_arm_dim_up(arm, dim = 'Z'):
 
 class ur5:
 
-    def __init__(self, urdfRootPath=pybullet_data.getDataPath()):
+    def __init__(self, verbose, urdfRootPath=pybullet_data.getDataPath()):
 
         self.robotUrdfPath = "objects/urdf/real_arm.urdf"
 
@@ -64,12 +64,14 @@ class ur5:
         self.zin = self.robotStartPos[2]
         self.active = False
         self.lastJointAngle = None
+        self.verbose = verbose
 
         self.reset()
 
     def reset(self):
-        print("----------------------------------------")
-        print("Loading robot from {}".format(self.robotUrdfPath))
+        if self.verbose:
+            print("----------------------------------------")
+            print("Loading robot from {}".format(self.robotUrdfPath))
         self.uid = p.loadURDF(os.path.join(os.getcwd(), self.robotUrdfPath), self.robotStartPos, self.robotStartOrn,
                               flags=p.URDF_USE_INERTIA_FROM_FILE)
         self.joints, self.controlRobotiqC2, self.controlJoints, self.mimicParentName = setup_sisbot(p, self.uid)
