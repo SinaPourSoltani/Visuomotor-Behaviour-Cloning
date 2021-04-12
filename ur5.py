@@ -31,7 +31,7 @@ def setup_sisbot(p, uid):
         info = jointInfo(jointID,jointName,jointType,jointLowerLimit,
                          jointUpperLimit,jointMaxForce,jointMaxVelocity,controllable)
         if info.type=="REVOLUTE": # set revolute joint to static
-            p.setJointMotorControl2(uid, info.id, p.VELOCITY_CONTROL, targetVelocity=0, force=0)
+            p.setJointMotorControl2(uid, info.id, p.VELOCITY_CONTROL, targetVelocity=0)
         joints[info.name] = info
     controlRobotiqC2 = False
     mimicParentName = False
@@ -107,46 +107,20 @@ class ur5:
             poses.append(motorCommands[i])
             indexes.append(joint.id)
             forces.append(joint.maxForce)
-        l = len(poses)
 
-        p.setJointMotorControlArray(self.uid, indexes, p.POSITION_CONTROL, targetPositions=poses)#,
-        #                             #positionGains=[0.06] * l, forces=forces)
-        #for i in range(6):
-        #    p.resetJointState(self.uid, indexes[i], poses[i])
-        #targetVelocities=[0] * l,
-        #p.setJointMotorControlArray(self.uid indexes, p.POSITION_CONTROL, targetPositions=poses, positionGains=[0.03] * l, forces=forces)
-        # holy shit this is so much faster in arrayform!
+        p.setJointMotorControlArray(self.uid, indexes, p.POSITION_CONTROL, targetPositions=poses)
+
 
     def get_tcp_pose(self):
         (pos, ori, _, _, _, _) = p.getLinkState(self.uid, self.endEffectorIndex, computeForwardKinematics=1)
         return np.asarray(pos), np.asarray(ori)
 
-    def move_to(self, x, y, z, ori, finger_angle, mode='abs', useLimits = False):
-        # z 0.775 puts the tool relative close to the surface, when tool is turned 90 degrees around y-axis
-        ori = p.getQuaternionFromEuler(ori)
-
-        if mode == 'rel':
-            pose = self.get_tcp_pose()
-            tcp_x, tcp_y, tcp_z = pose[0]
-            x += tcp_x
-            y += tcp_y
-            z += tcp_z
-            ori += pose[1]
-        
-        # define our limits.
-        if useLimits:
-            z = max(0.14, min(0.7, z))
-            x = max(-0.25, min(0.3, x))
-            y = max(-0.4, min(0.4, y))
-
+    def move_to(self, x, y, z, ori, finger_angle):
         jointPose = list(p.calculateInverseKinematics(self.uid, self.endEffectorIndex, [x, y, z], ori))
 
         jointPose[7] = -finger_angle / 25
         jointPose[6] = finger_angle / 25
 
         self.action(jointPose)
-
-            #p.setJointMotorControlArray(self.uid, indexes, p.POSITION_CONTROL, targetPositions=poses)#,
-        # print(jointPose)
         return jointPose
 
