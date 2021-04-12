@@ -39,7 +39,7 @@ class Expert:
         self.work_plane = 0.8#0.775
 
         self.tcp_approach_dist_threshold = 0.03
-        self.tcp_goal_line_dist_threshold = 0.4*2
+        self.tcp_goal_line_dist_threshold = 0.04
         self.item_goal_dist_threshold = 0.05
 
         self.step_size = 0.01
@@ -88,21 +88,31 @@ class Expert:
         if self.STATE == CALC_POKE:
             move = np.asarray([*self.goal_dir, 0])
 
-            tcp_goal_line_dist = geo.distance_to_line(self.tcp_pose[0][0:2], self.item.pos[0:2], self.goal_dir)
+            tcp_goal_line_dist = geo.distance_to_line(self.tcp_pose[0][0:2], self.item.pos[0:2], self.goal.pos[0:2])
             tcp_goal_dist = geo.dist(self.tcp_pose[0][0:2], self.goal.pos[0:2])
             item_goal_dist = geo.dist(self.item.pos[0:2], self.goal.pos[0:2])
             tcp_item_dist = geo.dist(self.tcp_pose[0][0:2], self.item.pos[0:2])
 
 
-            if self.verbose:
-                print("dist_line", tcp_goal_line_dist, "thresh", self.tcp_goal_line_dist_threshold, "bool", tcp_goal_line_dist > self.tcp_goal_line_dist_threshold)
-                print("tcp2goal", tcp_goal_dist, "item2goal", item_goal_dist, "bool", tcp_goal_dist < item_goal_dist)
+            if not self.verbose:
+                print('\n')
+                print("tcpp2line", tcp_goal_line_dist, "thresh", self.tcp_goal_line_dist_threshold, "1>2", tcp_goal_line_dist > self.tcp_goal_line_dist_threshold)
+                print("tcpp2goal", tcp_goal_dist, "item2goal", item_goal_dist, "1<2", tcp_goal_dist < item_goal_dist)
+                print("tcpp2goal", tcp_goal_dist, "tcpp2item", tcp_item_dist, "1<2", tcp_goal_dist < tcp_item_dist)
+                print("item pose", self.item.pos[0:2])
+                print("goal pose", self.goal.pos[0:2])
+                print("tcp-pose ", self.tcp_pose[0][0:2])
+                print("goal_dir ", self.goal_dir)
+
+                
+
+
 
             if tcp_goal_line_dist > self.tcp_goal_line_dist_threshold or tcp_goal_dist < item_goal_dist or tcp_goal_dist < tcp_item_dist:
 
                 self.STATE = ASCEND
 
-            if geo.dist(self.item.pos, self.goal.pos) <= self.item_goal_dist_threshold:
+            if geo.dist(self.item.pos[0:2], self.goal.pos[0:2]) <= self.item_goal_dist_threshold:
                 self.STATE = ON_GOAL
                 move = np.asarray([0, 0, 0])
 
