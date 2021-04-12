@@ -98,6 +98,7 @@ class Geometry:
         line_point_copy.resize(3)
         dir_vector_copy = np.copy(dir_vector)
         dir_vector_copy.resize(3)
+        dir_vector_copy = dir_vector_copy/np.linalg.norm(dir_vector_copy)
 
         m = line_point_copy - origo_copy
         line_moment = np.cross(m, dir_vector_copy)
