@@ -18,6 +18,7 @@ class Simulation:
 
         # Physics
         self.gravity = [0, 0, -9.82]
+        self.move_precision = 0.001
         self.time_step = 1./120.
 
         # Objects
@@ -55,12 +56,12 @@ class Simulation:
         if self.goalId is not None:
             p.removeBody(self.goalId)
 
-        #constraints = [(-0.3, 0.3), (-0.3, 0.3), 0.6367, 0, 0, (-math.pi, math.pi)]
+        constraints = [(-0.3, 0.3), (-0.3, 0.3), 0.6367, 0, 0, (-math.pi, math.pi)]
         object_constraints = [-0.1, -0.1, 0.6367, 0, 0, math.pi/4]
         goal_constraints = [0.2, -0.1, 0.6251, 0, 0, 0]
 
-        object_pose = self.random_pose(constraints=object_constraints)
-        goal_pose = self.random_pose(constraints=goal_constraints)
+        object_pose = self.random_pose(constraints=constraints)
+        goal_pose = self.random_pose(constraints=constraints)
         print(object_pose)
         print(goal_pose)
 
@@ -131,25 +132,41 @@ class Simulation:
         if sleep: 
             time.sleep(self.time_step)
 
-    def set_robot_pose(self, x, y, z=0.775, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3, mode='abs'):
-        self.robotArm.move_to(x, y, z, ori, finger_angle, mode=mode)
-        self.update_state()
-
-    def set_robot_pose_rel(self, x, y, z=0, ori=[ 0, 0, 0], finger_angle=1.3):
-
-        pose = self.robotArm.get_tcp_pose()
+    def set_robot_pose(self, x, y, z, ori=[ 0, 1/2*math.pi, 0], finger_angle=1.3, mode='abs', precision=0.001, useLimits=False):
+        i = 0
+        max_sim_steps = 500
         ori = p.getQuaternionFromEuler(ori)
-        tcp_x, tcp_y, tcp_z = pose[0]
-        x += tcp_x
-        y += tcp_y
-        z += tcp_z
-        ori += pose[1]
 
-        ori = p.getEulerFromQuaternion(ori)
-        for _ in range(100):
+        if mode == 'rel':
+            pose = self.robotArm.get_tcp_pose()
+            tcp_x, tcp_y, tcp_z = pose[0]
+            x += tcp_x
+            y += tcp_y
+            z += tcp_z
+            ori += pose[1]
+
+        # define our limits.
+        if useLimits:
+            z = max(0.775, z)
+            # x = max(-0.25, min(0.3, x))
+            # y = max(-0.4, min(0.4, y))
+
+        print("pos z: ", z)
+        for i in range (max_sim_steps):
+            #print("Current step: ", i + 1)
+            pose = self.robotArm.get_tcp_pose()
+            tcp_x, tcp_y, tcp_z = pose[0]
+            dist = math.sqrt((x-tcp_x)**2 + (y-tcp_y)**2 + (z-tcp_z)**2)
+            if dist < precision:
+                print("Pos reached! step: ", i)
+                break
             self.robotArm.move_to(x, y, z, ori, finger_angle)
-            self.step()
+            self.step(False)
+
+        #if i == max_sim_steps - 1:
+            #print("Max simulation steps reached! You fucked up!")
         self.update_state()
+
 
 
 
