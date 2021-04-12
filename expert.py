@@ -79,7 +79,13 @@ class Expert:
         self.goal = goal
 
         self.goal_dir = geo.get_direction_vector(self.item.pos, self.goal.pos)[0:2] # 2D (x, y)
+
         self.angle = geo.angle_between_vectors([1,0],self.goal_dir)
+        if self.goal.pos[1] < self.item.pos[1]:
+            self.angle = math.pi - self.angle
+        if self.verbose:
+            print("Goal_dir: ", self.goal_dir)
+            print("Angle (degrees): ", self.angle/math.pi*180)
         self.poke_dir = geo.rotate_vector(self.goal_dir, np.pi)
         self.tool_dir = geo.get_direction_vector(self.item.pos, self.tcp_pose[0])[0:2] # 2D (x, y)
         self.poke_point = self.calculate_poke_point()
@@ -98,7 +104,7 @@ class Expert:
             tcp_item_dist = geo.dist(self.tcp_pose[0][0:2], self.item.pos[0:2])
 
 
-            if not self.verbose:
+            if self.verbose:
                 print('\n')
                 print("tcpp2line", tcp_goal_line_dist, "thresh", self.tcp_goal_line_dist_threshold, "1>2", tcp_goal_line_dist > self.tcp_goal_line_dist_threshold)
                 print("tcpp2goal", tcp_goal_dist, "item2goal", item_goal_dist, "1<2", tcp_goal_dist < item_goal_dist)
@@ -165,5 +171,5 @@ class Expert:
         else:
             if self.verbose: print("Something went wrong. STATE unknown.")
 
-        ori = np.asarray([0, 1/2*math.pi, math.pi - self.angle])
+        ori = np.asarray([0, 1/2*math.pi, self.angle])
         return np.concatenate((move *self.step_size, ori))
