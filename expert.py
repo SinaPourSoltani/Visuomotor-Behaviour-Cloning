@@ -39,7 +39,7 @@ class Expert:
         self.work_plane = 0.8#0.775
 
         self.tcp_approach_dist_threshold = 0.03
-        self.tcp_goal_line_dist_threshold = 0.4
+        self.tcp_goal_line_dist_threshold = 0.4*2
         self.item_goal_dist_threshold = 0.05
 
         self.step_size = 0.01
@@ -87,14 +87,15 @@ class Expert:
         if self.STATE == CALC_POKE:
             move = np.asarray([*self.goal_dir, 0])
 
-            a = geo.distance_to_line(self.tcp_pose[0][0:2], self.item.pos[0:2], self.goal_dir)
-            b = self.tcp_goal_line_dist_threshold
-            c = geo.dist(self.tcp_pose[0][0:2], self.goal.pos[0:2])
-            d = geo.dist(self.item.pos[0:2], self.goal.pos[0:2])
+            tcp_goal_line_dist = geo.distance_to_line(self.tcp_pose[0][0:2], self.item.pos[0:2], self.goal_dir)
+            tcp_goal_dist = geo.dist(self.tcp_pose[0][0:2], self.goal.pos[0:2])
+            item_goal_dist = geo.dist(self.item.pos[0:2], self.goal.pos[0:2])
+            tcp_item_dist = geo.dist(self.tcp_pose[0][0:2], self.item.pos[0:2])
 
-            print("dist_line", a, "thresh", b, "bool", a > b)
-            print("tcp2goal", c, "item2goal", d, "bool", c < d)
-            if a > b or c < d:
+            print("dist_line", tcp_goal_line_dist, "thresh", self.tcp_goal_line_dist_threshold, "bool", tcp_goal_line_dist > self.tcp_goal_line_dist_threshold)
+            print("tcp2goal", tcp_goal_dist, "item2goal", item_goal_dist, "bool", tcp_goal_dist < item_goal_dist)
+
+            if tcp_goal_line_dist > self.tcp_goal_line_dist_threshold or tcp_goal_dist < item_goal_dist or tcp_goal_dist < tcp_item_dist:
                 self.STATE = ASCEND
 
             if geo.dist(self.item.pos, self.goal.pos) <= self.item_goal_dist_threshold:
