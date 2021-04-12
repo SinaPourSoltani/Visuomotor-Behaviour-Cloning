@@ -38,6 +38,7 @@ class Dataset:
         self.dataID = datetime.now().strftime("%d-%m_%H:%M:%S")
         self.path_to_store_img = image_path
         self.verbose = verbose
+        self.episodeNum = 0
 
         if image_path == None: 
             self.path_to_store_img = "data/images/" + self.dataID + "/"
@@ -59,17 +60,27 @@ class Dataset:
             os.makedirs(self.path_to_store_img)
         except:
             print("Directory already exists")
+
+        try: 
+            self.file = open(self.path_to_store_img + self.file_name, filemode)
+        except: 
+            raise Exception("Datafile was not created")
+        
         
 
     def __del__(self):
         self.file.close()
 
-    def add(self, image: Image, poke: np.ndarray, idx):
-        image_name = self.dataID + "_" + str(self.idx).zfill(4) + '.png'
+    def next_episode(self): 
+        self.episodeNum += 1
+        self.idx = 0
+
+    def add(self, image: Image, poke: np.ndarray):
+        image_name = "img_ep_" + str(self.episodeNum) +"_" + str(self.idx).zfill(4) + "_" + self.dataID + '.png'
         image.save(self.path_to_store_img + image_name)
         if self.verbose: print("Image file name: ", image_name)
 
-        self.file.write(image_name + ", " + str(poke[0]) + ", " + str(poke[1]) + ", " + str(poke[2]) + "\n") 
+        self.file.write(image_name + ", " + str(poke[0]) + ", " + str(poke[1]) + ", " + str(poke[2]) + ", "+ str(self.episodeNum) + "\n") 
         self.idx += 1
 
 

@@ -81,11 +81,11 @@ class Simulation:
         self.robotArm = load_arm_dim_up('ur5', self.verbose, dim='Z')
 
 
-        self.set_random_object_and_goal()
         self.setup_camera(cam_pos=[0, -1.5, 2], target_pos=[0, 0, 0.8])
 
     def reset_environment(self):
         # reset the position of the robot
+        self.set_random_object_and_goal()
         self.robotArm.resetJointPoses()
         for _ in range(100):
             p.stepSimulation()
