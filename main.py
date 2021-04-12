@@ -39,11 +39,13 @@ def main(args=None):
             sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
 
+
             if expert.STATE == 105: 
                 break
     
         dataset.next_episode()
         sim.reset_environment()
+
 
 
     #dataset.next_episode()
