@@ -39,7 +39,7 @@ class Expert:
         self.work_plane = 0.8#0.775
 
         self.tcp_approach_dist_threshold = 0.03
-        self.tcp_goal_line_dist_threshold = 0.20
+        self.tcp_goal_line_dist_threshold = 0.4
         self.item_goal_dist_threshold = 0.05
 
         self.step_size = 0.05
@@ -87,7 +87,14 @@ class Expert:
         if self.STATE == CALC_POKE:
             move = np.asarray([*self.goal_dir, 0])
 
-            if geo.distance_to_line(self.tcp_pose[0][0:2], self.item.pos[0:2], self.goal_dir) > self.tcp_goal_line_dist_threshold or geo.dist(self.tcp_pose[0][0:2], self.goal.pos[0:2]) < geo.dist(self.item.pos[0:2], self.goal.pos[0:2]):
+            a = geo.distance_to_line(self.tcp_pose[0][0:2], self.item.pos[0:2], self.goal_dir)
+            b = self.tcp_goal_line_dist_threshold
+            c = geo.dist(self.tcp_pose[0][0:2], self.goal.pos[0:2])
+            d = geo.dist(self.item.pos[0:2], self.goal.pos[0:2])
+
+            print("dist_line", a, "thresh", b, "bool", a > b)
+            print("tcp2goal", c, "item2goal", d, "bool", c < d)
+            if a > b or c < d:
                 self.STATE = ASCEND
 
             if geo.dist(self.item.pos, self.goal.pos) <= self.item_goal_dist_threshold:
