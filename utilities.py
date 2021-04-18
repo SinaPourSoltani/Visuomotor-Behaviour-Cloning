@@ -87,7 +87,9 @@ class Dataset:
 class Geometry:
     @staticmethod
     def dist(p1, p2):
-        return np.linalg.norm(p1 - p2)
+        p1_np = np.asarray(p1)
+        p2_np = np.asarray(p2)
+        return np.linalg.norm(p1_np - p2_np)
 
     @staticmethod
     def get_direction_vector(from_pos, to_pos):

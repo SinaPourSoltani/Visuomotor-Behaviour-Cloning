@@ -26,6 +26,7 @@ class Simulation:
         self.robotArm = None
         self.itemId = None
         self.goalId = None
+        self.minGoalObj_dist = 0.1
 
         # Camera
         self.px_width = 600
@@ -65,7 +66,13 @@ class Simulation:
         goal_constraints = [0.2, -0.1, 0.6251, 0, 0, 0]
 
         object_pose = self.random_pose(constraints=constraints)
-        goal_pose = self.random_pose(constraints=constraints)
+
+        while True:     
+            goal_pose = self.random_pose(constraints=constraints)
+            dist_poses =  Geometry.dist(goal_pose[0][:2], object_pose[0][:2])
+            if dist_poses > self.minGoalObj_dist:
+                break
+   
         if self.verbose:
             print(object_pose)
             print(goal_pose)
