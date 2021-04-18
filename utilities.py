@@ -65,7 +65,8 @@ class Dataset:
             self.file = open(self.path_to_store_img + self.file_name, filemode)
         except: 
             raise Exception("Datafile was not created")
-        
+
+        self.file.write("image_file_name, episode, ∆x, ∆y, ∆z")
         
 
     def __del__(self):
