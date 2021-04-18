@@ -66,7 +66,7 @@ class Dataset:
         except: 
             raise Exception("Datafile was not created")
 
-        self.file.write("image_file_name, episode, ∆x, ∆y, ∆z")
+        self.file.write("image_file_name, ∆x, ∆y, ∆z, episode")
         
 
     def __del__(self):
