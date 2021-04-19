@@ -66,7 +66,7 @@ class Dataset:
         except: 
             raise Exception("Datafile was not created")
 
-        self.file.write("image_file_name, ∆x, ∆y, ∆z, episode")
+        self.file.write("image_file_name,∆x,∆y,∆z,episode\n")
         
 
     def __del__(self):
@@ -81,7 +81,7 @@ class Dataset:
         image.save(self.path_to_store_img + image_name)
         if self.verbose: print("Image file name: ", image_name)
 
-        self.file.write(image_name + ", " + str(poke[0]) + ", " + str(poke[1]) + ", " + str(poke[2]) + ", "+ str(self.episodeNum) + "\n") 
+        self.file.write(image_name + "," + str(poke[0]) + "," + str(poke[1]) + "," + str(poke[2]) + ","+ str(self.episodeNum) + "\n") 
         self.idx += 1
 
 
