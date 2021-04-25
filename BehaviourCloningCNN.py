@@ -20,10 +20,9 @@ from torchvision import datasets, transforms
 
 def load_data(data_link):
     if not os.path.exists('data'):
-      !wget data_link
+      os.system("wget " + data_link)
       with ZipFile('images.zip', 'r') as z:
         z.extractall('data/')
-      !mv 'data/images/test.csv' 'data/test.csv'
 
 class PokeDataset(Dataset):
   def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms=None):
