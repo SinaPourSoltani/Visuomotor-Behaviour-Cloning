@@ -22,7 +22,7 @@ def load_data(data_link):
     if not os.path.exists('data'):
       os.system("wget " + data_link)
       with ZipFile('images.zip', 'r') as z:
-        z.extractall('data/')
+        z.extractall("./")
 
 class PokeDataset(Dataset):
   def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms=None):
