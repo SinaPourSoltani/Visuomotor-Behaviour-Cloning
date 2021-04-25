@@ -32,18 +32,20 @@ class State:
 
 
 class Dataset:
-    def __init__(self, verbose, file_name, image_path=None, filemode="x"):
+    def __init__(self, verbose, file_name, image_path=None, data_file_path=None, filemode="x"):
         
         self.idx = 0
         self.dataID = datetime.now().strftime("%d-%m_%H:%M:%S")
         self.path_to_store_img = image_path
         self.verbose = verbose
         self.episodeNum = 0
+        self.data_file_path = data_file_path
 
         if image_path == None: 
             self.path_to_store_img = "data/images/" + self.dataID + "/"
         else: 
             self.path_to_store_img = image_path
+
 
 
         if file_name[-4:] == ".csv":
@@ -62,7 +64,7 @@ class Dataset:
             print("Directory already exists")
 
         try: 
-            self.file = open(self.path_to_store_img + self.file_name, filemode)
+            self.file = open(self.data_file_path + self.file_name, filemode)
         except: 
             raise Exception("Datafile was not created")
 
