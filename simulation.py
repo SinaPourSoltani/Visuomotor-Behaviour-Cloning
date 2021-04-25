@@ -61,14 +61,15 @@ class Simulation:
         if self.goalId is not None:
             p.removeBody(self.goalId)
 
-        constraints = [(-0.3, 0.3), (-0.3, 0.3), 0.6367, 0, 0, (-math.pi, math.pi)]
-        object_constraints = [-0.1, -0.1, 0.6367, 0, 0, math.pi/4]
-        goal_constraints = [0.2, -0.1, 0.6251, 0, 0, 0]
 
-        object_pose = self.random_pose(constraints=constraints)
+        object_constraints = [(-0.24, 0.24), (-0.35, 0.35), 0.6567, 0, 0, (-math.pi, math.pi)]
+        goal_constraints = [(-0.20, 0.20), (-0.25, 0.25), 0.633, 0, 0, (-math.pi, math.pi)]
 
+
+        object_pose = self.random_pose(constraints=object_constraints)
+        #object_pose = [[-0.25, 0.35, 0.6567], [0, 0, math.pi/4]]
         while True:     
-            goal_pose = self.random_pose(constraints=constraints)
+            goal_pose = self.random_pose(constraints=goal_constraints)
             dist_poses =  Geometry.dist(goal_pose[0][:2], object_pose[0][:2])
             if dist_poses > self.minGoalObj_dist:
                 break
@@ -96,6 +97,7 @@ class Simulation:
         # reset the position of the robot
         self.set_random_object_and_goal()
         self.robotArm.resetJointPoses()
+        self.update_state()
         for _ in range(100):
             p.stepSimulation()
             time.sleep(self.time_step)
@@ -162,8 +164,8 @@ class Simulation:
         # define our limits.
         if useLimits:
             z = max(0.775, z)
-            # x = max(-0.25, min(0.3, x))
-            # y = max(-0.4, min(0.4, y))
+            #x = max(-0.25, min(0.3, x))
+            #y = max(-0.4, min(0.4, y))
 
         if self.verbose: print("pos z: ", z)
         for i in range (max_sim_steps):

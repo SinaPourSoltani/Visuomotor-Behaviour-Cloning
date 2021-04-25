@@ -24,6 +24,7 @@ def main(args=None):
     args = parse_args(args)
 
     sim = Simulation(args.verbose)
+
     expert = Expert(args.verbose)
     dataset = Dataset(args.verbose, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode)
 
@@ -43,7 +44,7 @@ def main(args=None):
 
             if expert.STATE == 105: 
                 break
-    
+
         dataset.next_episode()
         sim.reset_environment()
 
