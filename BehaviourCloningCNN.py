@@ -215,7 +215,7 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
     plt.tight_layout()
     plt.show()
 
-def get_model(with_cuda=True):
+def get_model():
     model = torchvision.models.resnet18(pretrained=True)
     #print(model)
     # See that the head after the conv-layers (in the bottom) is one linear layer, from 512 features to 1k-class logits.
@@ -227,7 +227,6 @@ def get_model(with_cuda=True):
         nn.UpsamplingBilinear2d((224,224)),
         model,
     )
-    if with_cuda:
-        model = model.cuda()
+    model = model.cuda()
 
     return model
