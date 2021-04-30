@@ -11,6 +11,7 @@ def parse_args(args):
     parser = argparse.ArgumentParser(description="Simple Script for generating training examples for a visuomotor task on a 2D-plane")
 
     parser.add_argument('--image_path', help="Path to where images should be saved", default="data/images/", type=str)
+    parser.add_argument('--data_file_path', help="", default="data/", type=str)
     parser.add_argument('--file_mode', help="Mode of the data file w: create new file, potentially overwrite, a: append to file existing, x: only create file if it it does not exists",default="w" , type=str)
     parser.add_argument('--data_file_name', help="Name of the file where tabular data is stored", default="test.csv", type=str)
     parser.add_argument('--verbose', help="Print out stuff while executing", action='store_true')
@@ -29,7 +30,7 @@ def main(args=None):
     sim = Simulation(args.verbose)
 
     expert = Expert(args.verbose)
-    dataset = Dataset(args.verbose, args.data_file_name, image_path=args.image_path,  filemode=args.file_mode)
+    dataset = Dataset(args.verbose, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode)
 
     sim.set_robot_pose(-0.25, -0.15, 0.775)
 
