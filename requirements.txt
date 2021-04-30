@@ -3,3 +3,8 @@ numpy
 Pillow
 dataclasses
 attrdict
+pandas
+tqdm
+torch
+torchvision
+matplotlib
