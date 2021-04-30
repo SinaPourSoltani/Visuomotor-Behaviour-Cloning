@@ -32,47 +32,50 @@ class State:
 
 
 class Dataset:
-    def __init__(self, verbose, file_name, image_path=None, filemode="x", start_idx=0):
-        
+    def __init__(self, verbose, file_name, image_path=None, data_file_path=None, filemode="x", start_idx=0):
+
         self.idx = 0
         self.dataID = datetime.now().strftime("%d-%m_%H:%M:%S")
         self.path_to_store_img = image_path
         self.verbose = verbose
-        self.episodeNum = start_idx
 
-        if image_path == None: 
+        self.episodeNum = start_idx
+        self.data_file_path = data_file_path
+
+        if image_path == None:
             self.path_to_store_img = "data/images/" + self.dataID + "/"
-        else: 
+        else:
             self.path_to_store_img = image_path
+
 
 
         if file_name[-4:] == ".csv":
             self.file_name = file_name
-        else: 
+        else:
             self.file_name = file_name + ".csv"
 
-        try: 
+        try:
             self.file = open(self.file_name, filemode)
-        except: 
+        except:
             raise Exception("Datafile was not created")
-        
+
         try:
             os.makedirs(self.path_to_store_img)
         except:
             print("Directory already exists")
 
-        try: 
-            self.file = open(self.path_to_store_img + self.file_name, filemode)
-        except: 
+        try:
+            self.file = open(self.data_file_path + self.file_name, filemode)
+        except:
             raise Exception("Datafile was not created")
 
         self.file.write("image_file_name,∆x,∆y,∆z,episode\n")
-        
+
 
     def __del__(self):
         self.file.close()
 
-    def next_episode(self): 
+    def next_episode(self):
         self.episodeNum += 1
         self.idx = 0
 
@@ -81,7 +84,7 @@ class Dataset:
         image.save(self.path_to_store_img + image_name)
         if self.verbose: print("Image file name: ", image_name)
 
-        self.file.write(image_name + "," + str(poke[0]) + "," + str(poke[1]) + "," + str(poke[2]) + ","+ str(self.episodeNum) + "\n") 
+        self.file.write(image_name + "," + str(poke[0]) + "," + str(poke[1]) + "," + str(poke[2]) + ","+ str(self.episodeNum) + "\n")
         self.idx += 1
 
 
@@ -110,7 +113,7 @@ class Geometry:
     def angle_between_vectors(v1, v2):
         return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
-    
+
     @staticmethod
     def distance_to_line(point, line_point1, line_point2):
         tcp_copy = np.copy(point)
@@ -121,7 +124,4 @@ class Geometry:
         linePoint2_copy.resize(3)
 
         d = np.linalg.norm(np.cross(linePoint2_copy - linePoint1_copy, linePoint1_copy - tcp_copy))/np.linalg.norm(linePoint2_copy - linePoint1_copy)
-        return d 
-
-
-
+        return d
