@@ -19,7 +19,8 @@ from torchvision import datasets, transforms
 def load_data(data_link):
     if not os.path.exists('data'):
       os.system("wget " + data_link)
-      with ZipFile('images.zip', 'r') as z:
+        file_name = data_link.split('/')[-1]
+      with ZipFile(file_name, 'r') as z:
         z.extractall("./")
 
 class PokeDataset(Dataset):
