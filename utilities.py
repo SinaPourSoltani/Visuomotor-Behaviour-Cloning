@@ -32,13 +32,13 @@ class State:
 
 
 class Dataset:
-    def __init__(self, verbose, file_name, image_path=None, filemode="x"):
+    def __init__(self, verbose, file_name, image_path=None, filemode="x", start_idx=0):
         
         self.idx = 0
         self.dataID = datetime.now().strftime("%d-%m_%H:%M:%S")
         self.path_to_store_img = image_path
         self.verbose = verbose
-        self.episodeNum = 0
+        self.episodeNum = start_idx
 
         if image_path == None: 
             self.path_to_store_img = "data/images/" + self.dataID + "/"

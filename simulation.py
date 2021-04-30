@@ -29,8 +29,8 @@ class Simulation:
         self.minGoalObj_dist = 0.1
 
         # Camera
-        self.px_width = 600
-        self.px_height = 600
+        self.px_width = 224
+        self.px_height = 224
         self.view_matrix = None
         self.proj_matrix = None
 
@@ -95,12 +95,14 @@ class Simulation:
 
     def reset_environment(self):
         # reset the position of the robot
-        self.set_random_object_and_goal()
         self.robotArm.resetJointPoses()
-        self.update_state()
         for _ in range(100):
             p.stepSimulation()
             time.sleep(self.time_step)
+        self.set_random_object_and_goal()
+
+
+        self.update_state()
 
     def grab_image(self, show=False):
         (_, _, px, _, _) = p.getCameraImage(self.px_width,self.px_height, self.view_matrix, self.proj_matrix)
