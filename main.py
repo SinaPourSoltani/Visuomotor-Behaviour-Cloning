@@ -1,6 +1,8 @@
 from simulation import Simulation
 from expert import Expert
 from utilities import Dataset
+from BehaviourCloningCNN import get_model
+import torch
 import os
 import sys
 import argparse
@@ -14,6 +16,8 @@ def parse_args(args):
     parser.add_argument('--verbose', help="Print out stuff while executing", action='store_true')
     parser.add_argument('--episodes', help="Number of episodes to be contained in the dataset",default=100, type=int )
     parser.add_argument('--MaxSteps', help="Maximum number of step in one episode", default=10000, type=int)
+    parser.add_argument('--test', help="Set whether to gather data with the expert or test with the model",default=True, type=bool)
+
     return parser.parse_args(args)
 
 def main(args=None):
@@ -28,18 +32,26 @@ def main(args=None):
     dataset = Dataset(args.verbose, args.data_file_name, image_path=args.image_path,  filemode=args.file_mode)
 
     sim.set_robot_pose(-0.25, -0.15, 0.775)
+
+    if args.test:
+        model = get_model(with_cuda=False)
+        model.load_state_dict(torch.load('model_10_episodes.pth'))
+        model.eval()
+
     for _ in range(args.episodes):
         for _ in range(args.MaxSteps):
             state = sim.get_state()
 
-            tcp_pose = sim.robotArm.get_tcp_pose()
-            sim.draw_coordinate_frame(*tcp_pose)
-            poke = expert.calculate_move(tcp_pose, state.item, state.goal)
-            dataset.add(state.image, poke)
+            if not args.test:
+                tcp_pose = sim.robotArm.get_tcp_pose()
+                sim.draw_coordinate_frame(*tcp_pose)
+                poke = expert.calculate_move(tcp_pose, state.item, state.goal)
+                dataset.add(state.image, poke)
+            else:
+                poke = model(state.image)
 
             sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
-
 
             if expert.STATE == 105: 
                 break

@@ -1,11 +1,9 @@
 import os
 from zipfile import ZipFile
-import copy
 import numpy as np
 import pandas as pd
 import csv
 import random
-from skimage import io
 from PIL import Image
 import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
@@ -216,7 +214,7 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
     plt.tight_layout()
     plt.show()
 
-def get_model():
+def get_model(with_cuda=True):
     model = torchvision.models.resnet18(pretrained=True)
     #print(model)
     # See that the head after the conv-layers (in the bottom) is one linear layer, from 512 features to 1k-class logits.
@@ -228,6 +226,7 @@ def get_model():
         nn.UpsamplingBilinear2d((224,224)),
         model,
     )
-    model = model.cuda()
+    if with_cuda:
+        model = model.cuda()
 
     return model
