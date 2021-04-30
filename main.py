@@ -1,8 +1,11 @@
+import torchvision.transforms
+
 from simulation import Simulation
 from expert import Expert
 from utilities import Dataset
 from BehaviourCloningCNN import get_model
 import torch
+import numpy as np
 import os
 import sys
 import argparse
@@ -37,9 +40,10 @@ def main(args=None):
     sim.set_robot_pose(-0.25, -0.15, 0.775)
 
     if args.test:
-        model = get_model(with_cuda=False)
+        model = get_model()
         model.load_state_dict(torch.load('model_10_episodes.pth'))
         model.eval()
+        device = next(model.parameters()).device
 
     for _ in range(args.episodes):
         for _ in range(args.MaxSteps):
@@ -51,7 +55,14 @@ def main(args=None):
                 poke = expert.calculate_move(tcp_pose, state.item, state.goal)
                 dataset.add(state.image, poke)
             else:
-                poke = model(state.image)
+                img = state.image.convert("RGB")
+                tf = torchvision.transforms.Compose([
+                    torchvision.transforms.ToTensor()
+                ])
+                x = tf(img).unsqueeze_(0).to(device)
+                y = model(x)
+                poke = y.cpu().detach().numpy().flatten()
+                print(poke)
 
             sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
