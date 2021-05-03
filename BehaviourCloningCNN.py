@@ -16,6 +16,8 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision
 from torchvision import datasets, transforms
 
+import quaternion
+
 def load_data(data_link):
     if not os.path.exists('data'):
       os.system("wget " + data_link)
@@ -24,12 +26,14 @@ def load_data(data_link):
         z.extractall("./")
 
 class PokeDataset(Dataset):
-  def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms=None):
+  def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms=None, std_noise_poke_vec=None):
     self.image_folder_path = image_folder_path
     self.transforms = transforms
     self.poke_frame = pd.read_csv(csv_file_path)
     self.poke_frame = self.poke_frame.loc[self.poke_frame['episode'].isin(episode_indeces)]
 
+
+    self.std_noise_poke_vec = std_noise_poke_vec
     self.transforms = transforms
 
   def __len__(self):
@@ -43,6 +47,8 @@ class PokeDataset(Dataset):
     image = Image.open(image_name).convert('RGB')
 
     poke = self.poke_frame.iloc[idx, 1:4] # TODO: update so matches with new csv format
+    if self.std_noise_poke_vec is not None:
+      poke = add_noise_poke_vector(poke)
     poke = np.array([poke], dtype='float32')
 
     sample = {'image': image, 'poke': poke}
@@ -53,6 +59,11 @@ class PokeDataset(Dataset):
 
     return sample
 
+def add_noise_poke_vector(vec, std_dev_deg=1):
+  theta_phi = np.radians(np.random.normal(0, 1, size=(1, 2)))
+  q = quaternion.from_spherical_coords(theta_phi)
+  vec_rot = quaternion.rotate_vectors(q, vec)
+  return vec_rot[0]
 
 def get_episodes():
     """**Load .csv file as Python object**"""
@@ -103,19 +114,19 @@ def get_episodes():
 #std = data.data.std(axis=(0, 1, 2)) # (N, H, W, 3) -> 3
 #print(data.data.shape)
 
-def PokeData(episodes, trnsfrms=None):
+def PokeData(episodes, trnsfrms=None, std_noise_poke_vec=None):
   tfms_norm = torchvision.transforms.Compose([
       transforms.ToTensor()
       # ToTensor already maps 0-255 to 0-1, so divide mu and std by 255 below
       #transforms.Normalize(mu / 255, std /255),
   ])
   tf = transforms.Compose([trnsfrms, tfms_norm]) if trnsfrms is not None else tfms_norm
-  return PokeDataset('data/test.csv', 'data/images/', episodes, tf)
+  return PokeDataset('data/test.csv', 'data/images/', episodes, tf, std_noise_poke_vec=std_noise_poke_vec)
 
 
-def get_data_loaders(train_episodes, valid_episodes, test_episodes):
+def get_data_loaders(train_episodes, valid_episodes, test_episodes, std_noise_poke_vec=None):
     loader_kwargs = {'batch_size': 16, 'num_workers': 2}
-    train_dataset = PokeData(train_episodes)
+    train_dataset = PokeData(train_episodes, std_noise_poke_vec)
     valid_dataset = PokeData(valid_episodes)
     test_dataset = PokeData(test_episodes)
 
