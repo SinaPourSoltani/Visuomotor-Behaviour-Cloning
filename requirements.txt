@@ -1,5 +1,5 @@
 pybullet
-numpy => 1.20.2
+numpy=>1.20.2
 Pillow
 dataclasses
 attrdict
