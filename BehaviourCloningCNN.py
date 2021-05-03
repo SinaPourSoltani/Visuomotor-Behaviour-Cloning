@@ -126,7 +126,7 @@ def PokeData(episodes, trnsfrms=None, std_noise_poke_vec=None):
 
 def get_data_loaders(train_episodes, valid_episodes, test_episodes, std_noise_poke_vec=None):
     loader_kwargs = {'batch_size': 16, 'num_workers': 2}
-    train_dataset = PokeData(train_episodes, std_noise_poke_vec)
+    train_dataset = PokeData(train_episodes, std_noise_poke_vec=std_noise_poke_vec)
     valid_dataset = PokeData(valid_episodes)
     test_dataset = PokeData(test_episodes)
 
