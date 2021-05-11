@@ -16,20 +16,25 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision
 from torchvision import datasets, transforms
 
+import quaternion
+
 def load_data(data_link):
     if not os.path.exists('data'):
       os.system("wget " + data_link)
-      with ZipFile('images.zip', 'r') as z:
+      file_name = data_link.split('/')[-1]
+      with ZipFile(file_name, 'r') as z:
         z.extractall("./")
 
 class PokeDataset(Dataset):
-  def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms, is_stereo=False):
+  def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms=None, is_stereo=False, std_noise_poke_vec=None):
     self.image_folder_path = image_folder_path
     self.transforms = transforms
     self.is_stereo = is_stereo
     self.poke_frame = pd.read_csv(csv_file_path)
     self.poke_frame = self.poke_frame.loc[self.poke_frame['episode'].isin(episode_indeces)]
 
+
+    self.std_noise_poke_vec = std_noise_poke_vec
     self.transforms = transforms
 
   def __len__(self):
@@ -54,6 +59,8 @@ class PokeDataset(Dataset):
 
     stereo_offset = 1 if self.is_stereo else 0
     poke = self.poke_frame.iloc[idx, 1+stereo_offset : 4+stereo_offset] # TODO: update so matches with new csv format
+    if self.std_noise_poke_vec is not None:
+          poke = add_noise_poke_vector(poke)
     poke = np.array([poke], dtype='float32')
 
     sample = {'image': self.transforms(image)} if not self.is_stereo \
@@ -62,6 +69,11 @@ class PokeDataset(Dataset):
 
     return sample
 
+def add_noise_poke_vector(vec, std_dev_deg=1):
+  theta_phi = np.radians(np.random.normal(0, 1, size=(1, 2)))
+  q = quaternion.from_spherical_coords(theta_phi)
+  vec_rot = quaternion.rotate_vectors(q, vec)
+  return vec_rot[0]
 
 def get_episodes():
     """**Load .csv file as Python object**"""
@@ -112,18 +124,18 @@ def get_episodes():
 #std = data.data.std(axis=(0, 1, 2)) # (N, H, W, 3) -> 3
 #print(data.data.shape)
 
-def PokeData(episodes, trnsfrms=None, is_stereo=False):
+def PokeData(episodes, trnsfrms=None, is_stereo=False, std_noise_poke_vec=None):
   tfms_norm = torchvision.transforms.Compose([
-      transforms.ToTensor(), 
+      transforms.ToTensor(),
       transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
   ])
   tf = transforms.Compose([trnsfrms, tfms_norm]) if trnsfrms is not None else tfms_norm
-  return PokeDataset('data/test.csv', 'data/images/', episodes, tf, is_stereo)
+  return PokeDataset('data/test.csv', 'data/images/', episodes, tf, is_stereo, std_noise_poke_vec=std_noise_poke_vec)
 
 
 def get_data_loaders(train_episodes, valid_episodes, test_episodes, transforms=None, is_stereo=False):
     loader_kwargs = {'batch_size': 16, 'num_workers': 2}
-    train_dataset = PokeData(train_episodes, transforms, is_stereo)
+    train_dataset = PokeData(train_episodes, transforms, is_stereo, std_noise_poke_vec=std_noise_poke_vec)
     valid_dataset = PokeData(valid_episodes, transforms, is_stereo)
     test_dataset = PokeData(test_episodes, transforms, is_stereo)
 
@@ -238,9 +250,9 @@ def get_model(is_stereo=False):
     )
     '''
     model = PokeNet(is_stereo)
-    try: 
+    try:
       model = model.cuda()
-    except: 
+    except:
       model = model.cpu()
     return model
 
@@ -248,15 +260,15 @@ def freeze_backbone_layers(model, start_idx, end_idx):
     backbone = list(model.named_children())[0][1]
     #print(backbone)
     for idx,  (name, layer) in enumerate(backbone.named_children()):
-      if idx >= start_idx and idx <= end_idx:  
+      if idx >= start_idx and idx <= end_idx:
         layer.requires_grad = False
       else:
         layer.requires_grad = True
       print("-------------------------------------------------------")
       print("layer:", name)
       print("grad: ", layer.requires_grad)
-    
-    return model 
+
+    return model
 
 class PokeNet(nn.Module):
     def __init__(self, is_stereo=False):
@@ -275,7 +287,3 @@ class PokeNet(nn.Module):
             x = self.backbone(x1)
 
         return self.head(x)
-
-
-
-

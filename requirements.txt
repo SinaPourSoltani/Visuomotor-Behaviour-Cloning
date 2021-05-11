@@ -1,5 +1,5 @@
 pybullet
-numpy
+numpy>=1.20.2
 Pillow
 dataclasses
 attrdict
@@ -8,3 +8,4 @@ tqdm
 torch
 torchvision
 matplotlib
+numpy-quaternion
