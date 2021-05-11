@@ -50,12 +50,12 @@ class PokeDataset(Dataset):
 
     if not self.is_stereo:
         image_name = os.path.join(self.image_folder_path, self.poke_frame.iloc[idx, 0])
-        image = Image.open(image_name)
+        image = Image.open(image_name).convert('RGB')
     else:
         image_name_l = os.path.join(self.image_folder_path, self.poke_frame.iloc[idx, 0])
-        image_l = Image.open(image_name_l)
+        image_l = Image.open(image_name_l).convert('RGB')
         image_name_r = os.path.join(self.image_folder_path, self.poke_frame.iloc[idx, 1])
-        image_r = Image.open(image_name_r)
+        image_r = Image.open(image_name_r).convert('RGB')
 
     stereo_offset = 1 if self.is_stereo else 0
     poke = self.poke_frame.iloc[idx, 1+stereo_offset : 4+stereo_offset] # TODO: update so matches with new csv format

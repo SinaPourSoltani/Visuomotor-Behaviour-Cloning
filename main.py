@@ -42,7 +42,7 @@ def main(args=None):
 
     if args.test:
         model = get_model()
-        model.load_state_dict(torch.load('ResNet18_Neps350_shadows_30epoch.pth'))
+        model.load_state_dict(torch.load('ResNet18_Neps350_shadows_30_epochs.pth', map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
 
