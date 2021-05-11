@@ -90,6 +90,8 @@ class Expert:
         self.tool_dir = geo.get_direction_vector(self.item.pos, self.tcp_pose[0])[0:2] # 2D (x, y)
         self.poke_point = self.calculate_poke_point()
 
+
+
     def calculate_move(self, tcp_pose, item: Item, goal: Item):
         self.update_geometry(tcp_pose, item, goal)
 

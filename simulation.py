@@ -10,11 +10,17 @@ from ur5 import load_arm_dim_up
 
 
 class Simulation:
-    def __init__(self, verbose):
+    def __init__(self, verbose, stereo_images):
+        # Parser arguments
+        self.verbose = verbose
+        self.stereo_images = stereo_images
+
         self.physicsClient = p.connect(p.GUI)
         self.state = None
 
+
         self.p = p
+        self.p.configureDebugVisualizer(p.COV_ENABLE_SHADOWS,1)
 
         # Physics
         self.gravity = [0, 0, -9.82]
@@ -31,19 +37,33 @@ class Simulation:
         # Camera
         self.px_width = 224
         self.px_height = 224
+            # Mono
         self.view_matrix = None
         self.proj_matrix = None
+            # Stereo
+        self.view_matrix_left = None
+        self.proj_matrix_left = None
+        self.view_matrix_right = None
+        self.proj_matrix_right = None
 
-        self.verbose = verbose
+
 
         self.setup_environment()
         self.reset_environment()
 
-
-
-    def setup_camera(self, cam_pos=[0, -1.5, 2], target_pos=[0, 0, 0.8], cam_up_pos=[0, 0, 1]):
-        self.view_matrix = p.computeViewMatrix(cam_pos, target_pos, cam_up_pos)
-        self.proj_matrix = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
+    #cam_pos = [0, -1.5, 2], target_pos = [0, 0, 0.8], cam_up_pos = [0, 0, 1]
+    #left_cam : cam_pos=[0.9, -0.7, 1.6], target_pos=[-0.2, 0.2, 0.5], cam_up_pos=[0, 0, 1]
+    #right_cam : cam_pos=[0.9, 0.7, 1.6], target_pos=[-0.2, -0.2, 0.5], cam_up_pos=[0, 0, 1]
+    def setup_camera(self):
+        cam_up_pos=[0, 0, 1]
+        if not self.stereo_images:
+            self.view_matrix = p.computeViewMatrix([0, -1.5, 2], [0, 0, 0.8], cam_up_pos)
+            self.proj_matrix = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
+        else:
+            self.view_matrix_left = p.computeViewMatrix([0.9, -0.7, 2], [-0.2, 0.2, 0.5], cam_up_pos)
+            self.proj_matrix_left = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
+            self.view_matrix_right = p.computeViewMatrix([0.9, 0.7, 2], [-0.2, -0.2, 0.5], cam_up_pos)
+            self.proj_matrix_right = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
 
     def random_pose(self, constraints):
         pose = []
@@ -90,8 +110,7 @@ class Simulation:
         self.tableId = p.loadURDF("objects/table/table.urdf", [0, 0, 0])
         self.robotArm = load_arm_dim_up('ur5', self.verbose, dim='Z')
 
-
-        self.setup_camera(cam_pos=[0, -1.5, 2], target_pos=[0, 0, 0.8])
+        self.setup_camera()
 
     def reset_environment(self):
         # reset the position of the robot
@@ -101,20 +120,26 @@ class Simulation:
             time.sleep(self.time_step)
         self.set_random_object_and_goal()
 
-
         self.update_state()
 
-    def grab_image(self, show=False):
-        (_, _, px, _, _) = p.getCameraImage(self.px_width,self.px_height, self.view_matrix, self.proj_matrix)
+    def grab_image(self, view_matrix, proj_matrix, show=False):
+        (_, _, px, _, _) = p.getCameraImage(self.px_width,self.px_height, view_matrix, proj_matrix, shadow=True, renderer=p.ER_BULLET_HARDWARE_OPENGL)
         img_data = np.array(px)
-        img = Image.fromarray(img_data, 'RGBA')
+        img = Image.fromarray(img_data, 'RGBA').convert('RGB')
         if show:
             img.show()
             input("Press enter to continue")
         return img
 
     def update_state(self):
-        image = self.grab_image()
+        image = None
+        if not self.stereo_images:
+            image = self.grab_image(self.view_matrix, self.proj_matrix)#[self.grab_image(self.view_matrix, self.proj_matrix)]
+        else:
+            image_l = self.grab_image(self.view_matrix_left, self.proj_matrix_left)
+            image_r = self.grab_image(self.view_matrix_right, self.proj_matrix_right)
+            image = [image_l, image_r]
+
         item = Item([], [], [])
         goal = Item([], [], [])
 

@@ -26,18 +26,19 @@ class Item:
 
 @dataclass
 class State:
-    image: Image
+    image: [Image]
     item: Item
     goal: Item
 
 
 class Dataset:
-    def __init__(self, verbose, file_name, image_path=None, data_file_path=None, filemode="x", start_idx=0):
+    def __init__(self, verbose, stereo_images, file_name, image_path=None, data_file_path=None, filemode="x", start_idx=0):
 
         self.idx = 0
         self.dataID = datetime.now().strftime("%d-%m_%H:%M:%S")
         self.path_to_store_img = image_path
         self.verbose = verbose
+        self.stereo_images = stereo_images
 
         self.episodeNum = start_idx
         self.data_file_path = data_file_path
@@ -68,8 +69,11 @@ class Dataset:
             self.file = open(self.data_file_path + self.file_name, filemode)
         except:
             raise Exception("Datafile was not created")
-
-        self.file.write("image_file_name,∆x,∆y,∆z,episode\n")
+        if start_idx == 0: # if empty add header, else just append
+            if not self.stereo_images:
+                self.file.write("image_file_name,∆x,∆y,∆z,episode\n")
+            else:
+                self.file.write("image_file_name_left,image_file_name_right,∆x,∆y,∆z,episode\n")
 
 
     def __del__(self):
@@ -79,10 +83,22 @@ class Dataset:
         self.episodeNum += 1
         self.idx = 0
 
-    def add(self, image: Image, poke: np.ndarray):
-        image_name = "img_ep_" + str(self.episodeNum) +"_" + str(self.idx).zfill(4) + "_" + self.dataID + '.png'
+    def save_image(self, image: Image, tag=None):
+        stereo_tag = "_" + tag if tag is not None else ""
+        image_name = "img_ep_" + str(self.episodeNum) +"_" + str(self.idx).zfill(4) + stereo_tag + "_" + self.dataID + '.png'
         image.save(self.path_to_store_img + image_name)
         if self.verbose: print("Image file name: ", image_name)
+        return image_name
+
+    def add(self, images: [Image], poke: np.ndarray):
+        image_name = ""
+        if self.stereo_images: # Stereo
+            tag = ['l','r']
+            for i, img in enumerate(images):
+                image_name += self.save_image(img, tag[i])
+                if i < 1: image_name += ","
+        else:
+            image_name = self.save_image(images[0])
 
         self.file.write(image_name + "," + str(poke[0]) + "," + str(poke[1]) + "," + str(poke[2]) + ","+ str(self.episodeNum) + "\n")
         self.idx += 1

@@ -19,9 +19,10 @@ def parse_args(args):
     parser.add_argument('--data_file_name', help="Name of the file where tabular data is stored", default="test.csv", type=str)
     parser.add_argument('--start_idx', help="Start index of episodes", default=0, type=int)
     parser.add_argument('--verbose', help="Print out stuff while executing", action='store_true')
-    parser.add_argument('--episodes', help="Number of episodes to be contained in the dataset",default=1000, type=int )
-    parser.add_argument('--MaxSteps', help="Maximum number of step in one episode", default=10000, type=int)
+    parser.add_argument('--episodes', help="Number of episodes to be contained in the dataset",default=500, type=int )
+    parser.add_argument('--MaxSteps', help="Maximum number of step in one episode", default=500, type=int)
     parser.add_argument('--test', help="Set whether to gather data with the expert or test with the model",default=True, type=bool)
+    parser.add_argument('--stereo_images', help="Set whether to use a stereo camera setup or a mono setup", default=False, type=bool)
 
     return parser.parse_args(args)
 
@@ -32,16 +33,16 @@ def main(args=None):
     args = parse_args(args)
     if args.start_idx != 0:
         args.file_mode = 'a'
-    sim = Simulation(args.verbose)
+    sim = Simulation(args.verbose, args.stereo_images)
 
     expert = Expert(args.verbose)
-    dataset = Dataset(args.verbose, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode, start_idx=args.start_idx)
+    dataset = Dataset(args.verbose, args.stereo_images, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode, start_idx=args.start_idx)
 
     sim.set_robot_pose(-0.25, -0.15, 0.775)
 
     if args.test:
         model = get_model()
-        model.load_state_dict(torch.load('model_10_episodes.pth'))
+        model.load_state_dict(torch.load('ResNet18_Neps350_shadows_30epoch.pth'))
         model.eval()
         device = next(model.parameters()).device
 
@@ -51,7 +52,7 @@ def main(args=None):
 
             if not args.test:
                 tcp_pose = sim.robotArm.get_tcp_pose()
-                sim.draw_coordinate_frame(*tcp_pose)
+                #sim.draw_coordinate_frame(*tcp_pose)
                 poke = expert.calculate_move(tcp_pose, state.item, state.goal)
                 dataset.add(state.image, poke)
             else:
@@ -63,7 +64,13 @@ def main(args=None):
                 y = model(x)
                 poke = y.cpu().detach().numpy().flatten()
                 print(poke)
+                tcp_pose = sim.robotArm.get_tcp_pose()
+                poke_for_ori = expert.calculate_move(tcp_pose, state.item, state.goal)
 
+                joined = np.concatenate([poke, poke_for_ori[3:]])
+
+
+            #sim.set_robot_pose(*joined, mode="rel", useLimits=True)
             sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
 

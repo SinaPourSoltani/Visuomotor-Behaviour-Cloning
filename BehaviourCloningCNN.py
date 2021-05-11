@@ -6,7 +6,7 @@ import csv
 import random
 from PIL import Image
 import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 import torch
 from torch import nn
@@ -23,9 +23,10 @@ def load_data(data_link):
         z.extractall("./")
 
 class PokeDataset(Dataset):
-  def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms=None):
+  def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms, is_stereo=False):
     self.image_folder_path = image_folder_path
     self.transforms = transforms
+    self.is_stereo = is_stereo
     self.poke_frame = pd.read_csv(csv_file_path)
     self.poke_frame = self.poke_frame.loc[self.poke_frame['episode'].isin(episode_indeces)]
 
@@ -38,17 +39,26 @@ class PokeDataset(Dataset):
     if torch.is_tensor(idx):
       idx = idx.tolist()
 
-    image_name = os.path.join(self.image_folder_path, self.poke_frame.iloc[idx, 0])
-    image = Image.open(image_name).convert('RGB')
+    image = None
+    image_l = None
+    image_r = None
 
-    poke = self.poke_frame.iloc[idx, 1:4] # TODO: update so matches with new csv format
+    if not self.is_stereo:
+        image_name = os.path.join(self.image_folder_path, self.poke_frame.iloc[idx, 0])
+        image = Image.open(image_name)
+    else:
+        image_name_l = os.path.join(self.image_folder_path, self.poke_frame.iloc[idx, 0])
+        image_l = Image.open(image_name_l)
+        image_name_r = os.path.join(self.image_folder_path, self.poke_frame.iloc[idx, 1])
+        image_r = Image.open(image_name_r)
+
+    stereo_offset = 1 if self.is_stereo else 0
+    poke = self.poke_frame.iloc[idx, 1+stereo_offset : 4+stereo_offset] # TODO: update so matches with new csv format
     poke = np.array([poke], dtype='float32')
 
-    sample = {'image': image, 'poke': poke}
-
-    if self.transforms:
-      for k in sample.keys():
-        sample[k] = self.transforms(sample[k])
+    sample = {'image': self.transforms(image)} if not self.is_stereo \
+        else {'image_l': self.transforms(image_l), 'image_r': self.transforms(image_r)}
+    sample['poke'] = torch.tensor(poke)
 
     return sample
 
@@ -70,7 +80,7 @@ def get_episodes():
         data[h].append(v)
 
     print("Number of episodes:", len(np.unique(data.get('episode'))))
-    print("Number of images:  ", len(data.get('image_file_name')))
+    print("Number of images:  ", len(data.get(list(data.keys())[0])))
     print("Images per episode:", np.unique(data.get('episode'), return_counts=True)[1])
     assert min(np.unique(data.get('episode'), return_counts=True)[1]) > 0, "Episode with fewer images than expected." # TODO: change to 10
 
@@ -102,21 +112,21 @@ def get_episodes():
 #std = data.data.std(axis=(0, 1, 2)) # (N, H, W, 3) -> 3
 #print(data.data.shape)
 
-def PokeData(episodes, trnsfrms=None):
+def PokeData(episodes, trnsfrms=None, is_stereo=False):
   tfms_norm = torchvision.transforms.Compose([
       transforms.ToTensor()
       # ToTensor already maps 0-255 to 0-1, so divide mu and std by 255 below
       #transforms.Normalize(mu / 255, std /255),
   ])
   tf = transforms.Compose([trnsfrms, tfms_norm]) if trnsfrms is not None else tfms_norm
-  return PokeDataset('data/test.csv', 'data/images/', episodes, tf)
+  return PokeDataset('data/test.csv', 'data/images/', episodes, tf, is_stereo)
 
 
-def get_data_loaders(train_episodes, valid_episodes, test_episodes):
+def get_data_loaders(train_episodes, valid_episodes, test_episodes, transforms=None, is_stereo=False):
     loader_kwargs = {'batch_size': 16, 'num_workers': 2}
-    train_dataset = PokeData(train_episodes)
-    valid_dataset = PokeData(valid_episodes)
-    test_dataset = PokeData(test_episodes)
+    train_dataset = PokeData(train_episodes, transforms, is_stereo)
+    valid_dataset = PokeData(valid_episodes, transforms, is_stereo)
+    test_dataset = PokeData(test_episodes, transforms, is_stereo)
 
     train_loader = torch.utils.data.DataLoader(train_dataset, **loader_kwargs, shuffle=True)
     valid_loader = torch.utils.data.DataLoader(valid_dataset, **loader_kwargs)
@@ -134,19 +144,23 @@ def correct_poke(est, gt):
   normalized_gt = gt / np.linalg.norm(gt, axis=1).reshape(-1,1)
   return np.sum(0.1 > np.linalg.norm(normalized_gt - normalized_est, axis=1))
 
-def one_epoch(model, data_loader, opt=None):
+def one_epoch(model, data_loader, opt=None, is_stereo=False):
     device = next(model.parameters()).device
     train = False if opt is None else True
     model.train() if train else model.eval()
     losses, correct, total = [], 0, 0
     for data in data_loader:
-        x = data['image']
-        y = data['poke'].squeeze()
-        #print("x.shape", x.shape)
-        #print("y.shape", y.shape)
-        x, y = x.to(device), y.to(device)
+        x = x1 = x2 = None
+        if is_stereo:
+            x1 = data['image_l'].to(device)
+            x2 = data['image_r'].to(device)
+        else:
+            x = data['image'].to(device)
+        y = data['poke'].squeeze().to(device)
+
         with torch.set_grad_enabled(train):
-            logits = model(x)
+            logits = model(x) if not is_stereo else model(x1, x2)
+
         loss = F.mse_loss(logits, y)
 
         if train:
@@ -155,12 +169,12 @@ def one_epoch(model, data_loader, opt=None):
             opt.step()
 
         losses.append(loss.item())
-        total += len(x)
+        total += len(x) if not is_stereo else len(x1)
         correct += correct_poke(y.cpu().detach().numpy(), logits.cpu().detach().numpy()) #(torch.argmax(logits, dim=1) == y).sum().item()
     return np.mean(losses), correct / total
 
 
-def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_decay=0., patience=3):
+def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_decay=0., patience=3, is_stereo=False):
     train_losses, train_accuracies = [], []
     valid_losses, valid_accuracies = [], []
 
@@ -170,11 +184,11 @@ def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_deca
 
     t = tqdm(range(max_epochs))
     for epoch in t:
-        train_loss, train_acc = one_epoch(model, loader_train, opt)
+        train_loss, train_acc = one_epoch(model, loader_train, opt, is_stereo=is_stereo)
         train_losses.append(train_loss)
         train_accuracies.append(train_acc)
 
-        valid_loss, valid_acc = one_epoch(model, loader_valid)
+        valid_loss, valid_acc = one_epoch(model, loader_valid, is_stereo=is_stereo)
         valid_losses.append(valid_loss)
         valid_accuracies.append(valid_acc)
 
@@ -214,18 +228,38 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
     plt.tight_layout()
     plt.show()
 
-def get_model():
+def get_model(is_stereo=False):
+    '''
     model = torchvision.models.resnet18(pretrained=True)
-    #print(model)
-    # See that the head after the conv-layers (in the bottom) is one linear layer, from 512 features to 1k-class logits.
-    # We want to replace it with a new head to 10-class logits:
     model.fc = nn.Linear(512, 3)
-    # Also, the model has been trained on images with a resolution of 224. Let's upscale our cifar10 images:
-
+        # The model has been trained on images with a resolution of 224x224
     model = nn.Sequential(
         nn.UpsamplingBilinear2d((224,224)),
         model,
     )
+    '''
+    model = PokeNet(is_stereo)
     model = model.cuda()
-
     return model
+
+class PokeNet(nn.Module):
+    def __init__(self, is_stereo=False):
+        super().__init__()
+        self.is_stereo = is_stereo
+        self.backbone = torchvision.models.resnet18(pretrained=True)
+        self.backbone.fc = nn.Identity()
+        self.head = nn.Linear(1024, 3) if self.is_stereo else nn.Linear(512, 3)
+
+    def forward(self, x1, x2):
+        if self.is_stereo:
+            x1 = self.backbone(x1)
+            x2 = self.backbone(x2)
+            x = torch.stack(x1, x2)
+        else:
+            x = self.backbone(x1)
+
+        return self.head(x)
+
+
+
+
