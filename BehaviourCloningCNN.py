@@ -238,8 +238,25 @@ def get_model(is_stereo=False):
     )
     '''
     model = PokeNet(is_stereo)
-    model = model.cuda()
+    try: 
+      model = model.cuda()
+    except: 
+      model = model.cpu()
     return model
+
+def freeze_backbone_layers(model, start_idx, end_idx):
+    backbone = list(model.named_children())[0][1]
+    #print(backbone)
+    for idx,  (name, layer) in enumerate(backbone.named_children()):
+      if idx >= start_idx and idx <= end_idx:  
+        layer.requires_grad = False
+      else:
+        layer.requires_grad = True
+      print("-------------------------------------------------------")
+      print("layer:", name)
+      print("grad: ", layer.requires_grad)
+    
+    return model 
 
 class PokeNet(nn.Module):
     def __init__(self, is_stereo=False):
