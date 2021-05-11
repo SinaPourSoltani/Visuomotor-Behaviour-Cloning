@@ -114,9 +114,8 @@ def get_episodes():
 
 def PokeData(episodes, trnsfrms=None, is_stereo=False):
   tfms_norm = torchvision.transforms.Compose([
-      transforms.ToTensor()
-      # ToTensor already maps 0-255 to 0-1, so divide mu and std by 255 below
-      #transforms.Normalize(mu / 255, std /255),
+      transforms.ToTensor(), 
+      transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
   ])
   tf = transforms.Compose([trnsfrms, tfms_norm]) if trnsfrms is not None else tfms_norm
   return PokeDataset('data/test.csv', 'data/images/', episodes, tf, is_stereo)
