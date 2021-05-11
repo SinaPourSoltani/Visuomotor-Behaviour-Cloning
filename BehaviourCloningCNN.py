@@ -170,7 +170,10 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
         y = data['poke'].squeeze().to(device)
 
         with torch.set_grad_enabled(train):
-            logits = model(x) if not is_stereo else model(x1, x2)
+            if not is_stereo: 
+              logits = model(x)
+            else:
+              logits = model(x1, x2)
 
         loss = F.mse_loss(logits, y)
 
