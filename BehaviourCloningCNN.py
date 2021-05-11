@@ -133,7 +133,7 @@ def PokeData(episodes, trnsfrms=None, is_stereo=False, std_noise_poke_vec=None):
   return PokeDataset('data/test.csv', 'data/images/', episodes, tf, is_stereo, std_noise_poke_vec=std_noise_poke_vec)
 
 
-def get_data_loaders(train_episodes, valid_episodes, test_episodes, transforms=None, is_stereo=False):
+def get_data_loaders(train_episodes, valid_episodes, test_episodes, transforms=None, is_stereo=False, std_noise_poke_vec=None):
     loader_kwargs = {'batch_size': 16, 'num_workers': 2}
     train_dataset = PokeData(train_episodes, transforms, is_stereo, std_noise_poke_vec=std_noise_poke_vec)
     valid_dataset = PokeData(valid_episodes, transforms, is_stereo)
