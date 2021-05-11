@@ -281,7 +281,7 @@ class PokeNet(nn.Module):
         self.backbone.fc = nn.Identity()
         self.head = nn.Linear(1024, 3) if self.is_stereo else nn.Linear(512, 3)
 
-    def forward(self, x1, x2):
+    def forward(self, x1, x2=None):
         if self.is_stereo:
             x1 = self.backbone(x1)
             x2 = self.backbone(x2)
