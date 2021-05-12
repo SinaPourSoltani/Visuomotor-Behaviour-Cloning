@@ -42,7 +42,7 @@ def main(args=None):
 
     if args.test:
         model = get_model()
-        model.load_state_dict(torch.load('ResNet18_Neps350_shadows_30_epochs.pth', map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load('ResNet18_Neps350.pth', map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
 
@@ -58,7 +58,9 @@ def main(args=None):
             else:
                 img = state.image.convert("RGB")
                 tf = torchvision.transforms.Compose([
-                    torchvision.transforms.ToTensor()
+                    torchvision.transforms.ToTensor(),
+                    torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
                 ])
                 x = tf(img).unsqueeze_(0).to(device)
                 y = model(x)
