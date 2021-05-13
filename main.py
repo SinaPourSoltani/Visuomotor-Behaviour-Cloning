@@ -2,7 +2,7 @@ import torchvision.transforms
 
 from simulation import Simulation
 from expert import Expert
-from utilities import Dataset
+from utilities import Dataset, Geometry
 from BehaviourCloningCNN import get_model
 import torch
 import numpy as np
@@ -74,11 +74,12 @@ def main(args=None):
                     y = model(x)
 
                 poke = y.cpu().detach().numpy().flatten()
+                poke = Geometry.unit_vector(poke) * expert.step_size
                 print(poke)
                 tcp_pose = sim.robotArm.get_tcp_pose()
                 poke_for_ori = expert.calculate_move(tcp_pose, state.item, state.goal)
 
-                joined = np.concatenate([poke, poke_for_ori[3:]])
+                joined = np.concatenate([poke, poke_for_ori[3:]]) # why??
 
 
             #sim.set_robot_pose(*joined, mode="rel", useLimits=True)
