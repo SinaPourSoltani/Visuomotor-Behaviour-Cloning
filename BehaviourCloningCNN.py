@@ -70,7 +70,7 @@ class PokeDataset(Dataset):
     return sample
 
 def add_noise_poke_vector(vec, std_dev_deg=1):
-  theta_phi = np.radians(np.random.normal(0, 1, size=(1, 2)))
+  theta_phi = np.radians(np.random.normal(0, std_dev_deg, size=(1, 2)))
   q = quaternion.from_spherical_coords(theta_phi)
   vec_rot = quaternion.rotate_vectors(q, vec)
   return vec_rot[0]
@@ -283,9 +283,14 @@ class PokeNet(nn.Module):
 
     def forward(self, x1, x2=None):
         if self.is_stereo:
-            x1 = self.backbone(x1)
-            x2 = self.backbone(x2)
-            x = torch.cat((x1, x2), dim=1)
+            x = torch.cat((x1, x2), dim=0)
+            #x1 = self.backbone(x1)
+            #x2 = self.backbone(x2)
+            #x = torch.cat((x1, x2), dim=1)
+            x = self.backbone(x)
+            print(x.shape)
+            x1, x2 = x.view(2, -1, 512) #
+            x = torch.cat((x1, x2), dim=1) 
         else:
             x = self.backbone(x1)
             
