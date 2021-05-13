@@ -285,8 +285,10 @@ class PokeNet(nn.Module):
         if self.is_stereo:
             x1 = self.backbone(x1)
             x2 = self.backbone(x2)
-            x = torch.stack(x1, x2)
+            x = torch.cat((x1, x2), dim=1)
+            print(x.shape)
         else:
             x = self.backbone(x1)
+            
 
         return self.head(x)

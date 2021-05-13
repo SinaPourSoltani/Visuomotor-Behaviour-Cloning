@@ -42,7 +42,7 @@ def main(args=None):
 
     if args.test:
         model = get_model()
-        model.load_state_dict(torch.load('ResNet18_Neps350.pth', map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_13-09-37.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
 
@@ -56,14 +56,23 @@ def main(args=None):
                 poke = expert.calculate_move(tcp_pose, state.item, state.goal)
                 dataset.add(state.image, poke)
             else:
-                img = state.image.convert("RGB")
-                tf = torchvision.transforms.Compose([
-                    torchvision.transforms.ToTensor(),
-                    torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
-                ])
-                x = tf(img).unsqueeze_(0).to(device)
-                y = model(x)
+                tf = torchvision.transforms.Compose([
+                        torchvision.transforms.ToTensor(),
+                        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+                if args.stereo_images:
+                    img1 = state.image[0].convert("RGB")
+                    img2 = state.image[1].convert("RGB")
+                    x1 = tf(img1).unsqueeze_(0).to(device)
+                    x2 = tf(img2).unsqueeze_(0).to(device)
+                    y = model(x1, x2)
+
+                else:
+                    img = state.image.convert("RGB")
+                    x = tf(img).unsqueeze_(0).to(device)
+                    y = model(x)
+
                 poke = y.cpu().detach().numpy().flatten()
                 print(poke)
                 tcp_pose = sim.robotArm.get_tcp_pose()
