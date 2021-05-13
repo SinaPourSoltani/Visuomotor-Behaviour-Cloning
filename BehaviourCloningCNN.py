@@ -206,7 +206,7 @@ def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_deca
         valid_losses.append(valid_loss)
         valid_accuracies.append(valid_acc)
 
-        t.set_description(f'train_acc: {train_acc:.2f}, valid_acc: {valid_acc:.2f}')
+        t.set_description(f'train_loss: {train_loss:.2f}, valid_loss: {valid_loss:.2f}')
 
         if valid_acc > best_valid_accuracy:
             best_valid_accuracy = valid_acc
@@ -214,7 +214,7 @@ def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_deca
 
         if epoch > best_valid_accuracy_epoch + patience:
             break
-    t.set_description(f'best valid acc: {best_valid_accuracy:.2f}')
+    #t.set_description(f'best valid acc: {best_valid_accuracy:.2f}')
 
     return train_losses, train_accuracies, valid_losses, valid_accuracies
 
