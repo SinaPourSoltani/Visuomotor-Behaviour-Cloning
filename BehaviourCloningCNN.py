@@ -280,7 +280,9 @@ class PokeNet(nn.Module):
         self.backbone = torchvision.models.resnet18(pretrained=True)
         self.backbone.fc = nn.Identity()
         self.head = nn.Linear(1024, 3) if self.is_stereo else nn.Linear(512, 3)
-
+        self.head.weight.data.fill_(0)
+        self.head.bias.data.fill_(0)
+        
     def forward(self, x1, x2=None):
         if self.is_stereo:
             x = torch.cat((x1, x2), dim=0)
