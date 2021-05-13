@@ -41,7 +41,7 @@ def main(args=None):
     sim.set_robot_pose(-0.25, -0.15, 0.775)
 
     if args.test:
-        model = get_model()
+        model = get_model(is_stereo=args.stereo_images)
         model.load_state_dict(torch.load("ResNet18_13-09-37.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
