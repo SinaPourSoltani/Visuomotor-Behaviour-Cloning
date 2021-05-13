@@ -286,7 +286,6 @@ class PokeNet(nn.Module):
             x1 = self.backbone(x1)
             x2 = self.backbone(x2)
             x = torch.cat((x1, x2), dim=1)
-            print(x.shape)
         else:
             x = self.backbone(x1)
             
