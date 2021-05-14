@@ -1,7 +1,7 @@
 import torchvision.transforms
 
 from simulation import Simulation
-from expert import Expert
+from expert import *
 from utilities import Dataset, Geometry
 from BehaviourCloningCNN import get_model
 import torch
@@ -35,7 +35,7 @@ def main(args=None):
     if args.start_idx != 0:
         args.file_mode = 'a'
     sim = Simulation(args.verbose, args.stereo_images)
-
+    succes = 0
   
         
     expert = Expert(args.verbose)
@@ -45,7 +45,7 @@ def main(args=None):
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_13-20-25.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_Neps350.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
 
@@ -89,7 +89,8 @@ def main(args=None):
             sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
 
-            if expert.STATE == 105:
+            if expert.STATE == ON_GOAL:
+                succes += 1
                 break
 
         dataset.next_episode()
@@ -98,6 +99,7 @@ def main(args=None):
 
 
     #dataset.next_episode()
+    print("Succes: {} | Succes rate: {:.4f}%".format(succes, 100*succes/args.episodes))
     print("Done!\nTerminating...")
 
     sim.terminate()
