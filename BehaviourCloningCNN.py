@@ -7,6 +7,7 @@ import random
 from PIL import Image
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from utilities import Geometry as geo
 
 import torch
 from torch import nn
@@ -159,7 +160,7 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
     device = next(model.parameters()).device
     train = False if opt is None else True
     model.train() if train else model.eval()
-    losses, correct, total = [], 0, 0
+    losses, total_deviation, total = [], 0, 0
     for data in data_loader:
         x = x1 = x2 = None
         if is_stereo:
@@ -184,8 +185,10 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
 
         losses.append(loss.item())
         total += len(x) if not is_stereo else len(x1)
-        correct += correct_poke(y.cpu().detach().numpy(), logits.cpu().detach().numpy()) #(torch.argmax(logits, dim=1) == y).sum().item()
-    return np.mean(losses), correct / total
+        for vector_pred, vector_gt in zip(logits, y): 
+          total_deviation += geo.angle_between_vectors(vector_pred, vector_gt)
+        #correct += correct_poke(y.cpu().detach().numpy(), logits.cpu().detach().numpy()) #(torch.argmax(logits, dim=1) == y).sum().item()
+    return np.mean(losses), total_deviation / total
 
 
 def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_decay=0., patience=3, is_stereo=False):
@@ -223,7 +226,7 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
 
     plt.subplot(1, 2, 1)
     plt.xlabel('epoch')
-    plt.ylabel('loss')
+    plt.ylabel('loss - MSE')
     p = plt.plot(train_losses, label='train')
     plt.plot(valid_losses, label='valid')
     plt.autoscale()
@@ -232,7 +235,7 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
 
     plt.subplot(1, 2, 2)
     plt.xlabel('epoch')
-    plt.ylabel('accuracy')
+    plt.ylabel('angular deviation [rad]')
     p = plt.plot(train_accuracies, label='train')
     plt.plot(valid_accuracies, label='valid')
     plt.ylim(0, 1.05)
@@ -282,7 +285,7 @@ class PokeNet(nn.Module):
         self.head = nn.Linear(1024, 3) if self.is_stereo else nn.Linear(512, 3)
         self.head.weight.data.fill_(0)
         self.head.bias.data.fill_(0)
-        
+
     def forward(self, x1, x2=None):
         if self.is_stereo:
             x = torch.cat((x1, x2), dim=0)

@@ -36,6 +36,8 @@ def main(args=None):
         args.file_mode = 'a'
     sim = Simulation(args.verbose, args.stereo_images)
 
+  
+        
     expert = Expert(args.verbose)
     dataset = Dataset(args.verbose, args.stereo_images, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode, start_idx=args.start_idx)
 
@@ -43,7 +45,7 @@ def main(args=None):
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_13-12-27.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_13-20-25.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
 
