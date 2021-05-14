@@ -282,26 +282,35 @@ def freeze_backbone_layers(model, start_idx, end_idx):
     return model
 
 class PokeNet(nn.Module):
-    def __init__(self, is_stereo=False):
+    def __init__(self, is_stereo=False, p_dropout=0.):
         super().__init__()
         self.is_stereo = is_stereo
         self.backbone = torchvision.models.resnet18(pretrained=True)
         self.backbone.fc = nn.Identity()
-        self.head = nn.Linear(1024, 3) if self.is_stereo else nn.Linear(512, 3)
+
+        self.backbone_2 = torchvision.models.resnet18(pretrained=True)
+        self.backbone_2.fc = nn.Identity()
+
+        self.head = nn.Sequential([
+          nn.Dropout(p_dropout),
+          nn.Linear(1024, 256) if self.is_stereo else nn.Linear(512, 256),
+          nn.ReLU(),
+          nn.Dropout(p_dropout*0.5),
+          nn.Linear(256, 3),
+        ])
+        
         self.head.weight.data.fill_(0)
         self.head.bias.data.fill_(0)
 
     def forward(self, x1, x2=None):
         if self.is_stereo:
-            x = torch.cat((x1, x2), dim=0)
-            #x1 = self.backbone(x1)
-            #x2 = self.backbone(x2)
-            #x = torch.cat((x1, x2), dim=1)
-            x = self.backbone(x)
-            x1, x2 = x.view(2, -1, 512) #
+            x1 = self.backbone(x1)
+            x2 = self.backbone_2(x2)
             x = torch.cat((x1, x2), dim=1) 
         else:
             x = self.backbone(x1)
             
+        poke = self.head(x)
+        unit_poke = poke / (np.linalg.norm(poke) + 0.00001)
 
-        return self.head(x)
+        return unit_poke

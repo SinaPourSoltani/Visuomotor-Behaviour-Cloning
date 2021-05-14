@@ -22,7 +22,7 @@ def parse_args(args):
     parser.add_argument('--verbose', help="Print out stuff while executing", action='store_true')
     parser.add_argument('--episodes', help="Number of episodes to be contained in the dataset",default=500, type=int )
     parser.add_argument('--MaxSteps', help="Maximum number of step in one episode", default=500, type=int)
-    parser.add_argument('--test', help="Set whether to gather data with the expert or test with the model",default=True, type=bool)
+    parser.add_argument('--test', help="Set whether to gather data with the expert or test with the model",default=False, type=bool)
     parser.add_argument('--stereo_images', help="Set whether to use a stereo camera setup or a mono setup", default=False, type=bool)
 
     return parser.parse_args(args)
@@ -37,7 +37,7 @@ def main(args=None):
     sim = Simulation(args.verbose, args.stereo_images)
     succes = 0
   
-        
+    print("test:", args.test)
     expert = Expert(args.verbose)
     dataset = Dataset(args.verbose, args.stereo_images, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode, start_idx=args.start_idx)
 

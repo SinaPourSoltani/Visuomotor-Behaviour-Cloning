@@ -60,9 +60,9 @@ class Simulation:
             self.view_matrix = p.computeViewMatrix([0, -1.5, 2], [0, 0, 0.8], cam_up_pos)
             self.proj_matrix = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
         else:
-            self.view_matrix_left = p.computeViewMatrix([0.9, -0.7, 2], [-0.2, 0.2, 0.5], cam_up_pos)
+            self.view_matrix_left = p.computeViewMatrix([0, -1.5, 2], [0, 0, 0.8], cam_up_pos)
             self.proj_matrix_left = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
-            self.view_matrix_right = p.computeViewMatrix([0.9, 0.7, 2], [-0.2, -0.2, 0.5], cam_up_pos)
+            self.view_matrix_right = p.computeViewMatrix([1.3, 0, 2], [0, 0, 0.8], cam_up_pos)
             self.proj_matrix_right = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
 
     def random_pose(self, constraints):
