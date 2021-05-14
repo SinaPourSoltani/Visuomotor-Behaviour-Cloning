@@ -238,7 +238,7 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
     plt.ylabel('angular deviation [rad]')
     p = plt.plot(train_accuracies, label='train')
     plt.plot(valid_accuracies, label='valid')
-    plt.ylim(0, 1.05)
+    plt.autoscale()
     plt.legend()
     plt.grid()
 
