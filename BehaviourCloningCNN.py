@@ -186,7 +186,7 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
         losses.append(loss.item())
         total += len(x) if not is_stereo else len(x1)
         for vector_pred, vector_gt in zip(logits, y): 
-          total_deviation += geo.angle_between_vectors(vector_pred, vector_gt)
+          total_deviation += geo.angle_between_vectors(vector_pred.cpu().detach().numpy(), vector_gt.cpu().detach().numpy())
         #correct += correct_poke(y.cpu().detach().numpy(), logits.cpu().detach().numpy()) #(torch.argmax(logits, dim=1) == y).sum().item()
     return np.mean(losses), total_deviation / total
 
