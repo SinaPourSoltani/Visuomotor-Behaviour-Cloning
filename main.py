@@ -76,13 +76,13 @@ def main(args=None):
                     x = tf(img).unsqueeze_(0).to(device)
                     y = model(x)
 
-                poke = y.cpu().detach().numpy().flatten()
-                poke = Geometry.unit_vector(poke) * expert.step_size
-                print(poke)
-                tcp_pose = sim.robotArm.get_tcp_pose()
-                poke_for_ori = expert.calculate_move(tcp_pose, state.item, state.goal)
+                #poke = y.cpu().detach().numpy().flatten()
+                #poke = Geometry.unit_vector(poke) * expert.step_size
+                #print(poke)
+                #tcp_pose = sim.robotArm.get_tcp_pose()
+                #poke_for_ori = expert.calculate_move(tcp_pose, state.item, state.goal)
 
-                joined = np.concatenate([poke, poke_for_ori[3:]]) # why??
+                #joined = np.concatenate([poke, poke_for_ori[3:]]) # why??
 
 
             #sim.set_robot_pose(*joined, mode="rel", useLimits=True)
