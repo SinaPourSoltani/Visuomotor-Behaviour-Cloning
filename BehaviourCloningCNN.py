@@ -8,6 +8,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from utilities import Geometry as geo
+import json
 
 import torch
 from torch import nn
@@ -196,13 +197,15 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
     return np.mean(losses), total_deviation / total
 
 
-def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_decay=0., patience=3, is_stereo=False):
+def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_decay=0., patience=3, is_stereo=False, model_tag=""):
     train_losses, train_accuracies = [], []
     valid_losses, valid_accuracies = [], []
 
     opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     best_valid_accuracy = 0
     best_valid_accuracy_epoch = 0
+
+    summary = {}
 
     t = tqdm(range(max_epochs))
     for epoch in t:
@@ -220,7 +223,23 @@ def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_deca
             best_valid_accuracy = valid_acc
             best_valid_accuracy_epoch = epoch
 
-        if epoch > best_valid_accuracy_epoch + patience:
+
+        if (epoch + 1) % 5 == 0:
+            filename = "ResNet18_epoch" + str(epoch + 1) + "_" + model_tag + ".pth"
+            torch.save(model.state_dict(), filename)
+
+            #summary["Model name"] = filename;
+            summary["Epochs"] = len(train_losses)
+            summary["Train losses"] = train_losses
+            summary["Valid losses"] = valid_losses
+            summary["Is stereo"] = is_stereo
+            summary["Learning rate"] = lr
+
+            summary_file_name = "summary_" + model_tag
+            with open(summary_file_name, 'w') as outfile:
+                json.dump(summary, outfile)
+
+        if epoch > best_valid_accuracy_epoch + patience and patience >= 0:
             break
     #t.set_description(f'best valid acc: {best_valid_accuracy:.2f}')
 
