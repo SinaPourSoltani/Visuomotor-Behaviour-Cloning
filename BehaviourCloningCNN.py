@@ -352,7 +352,7 @@ class PokeNet(nn.Module):
         else:
             x = self.backbone(x1)
             
-        poke = self.head(x)
+        poke = self.head(x).cpu().detach().numpy()
         unit_poke = poke / (np.linalg.norm(poke) + 0.00001)
 
         return unit_poke
