@@ -34,7 +34,7 @@ class PokeDataset(Dataset):
     self.is_stereo = is_stereo
     self.poke_frame = pd.read_csv(csv_file_path)
     self.poke_frame = self.poke_frame.loc[self.poke_frame['episode'].isin(episode_indeces)]
-
+    self.stepsize = 0.01
 
     self.std_noise_poke_vec = std_noise_poke_vec
     self.transforms = transforms
@@ -63,10 +63,10 @@ class PokeDataset(Dataset):
     poke = self.poke_frame.iloc[idx, 1+stereo_offset : 4+stereo_offset] # TODO: update so matches with new csv format
 
     poke = np.array([poke], dtype='float32')
-    poke = poke/np.linalg.norm(poke)
-    
+    poke = poke * 1/self.stepsize
     if self.std_noise_poke_vec is not None:
           poke = add_noise_poke_vector(poke)
+          
     sample = {'image': self.transforms(image)} if not self.is_stereo \
         else {'image_l': self.transforms(image_l), 'image_r': self.transforms(image_r)}
     sample['poke'] = torch.tensor(poke)
