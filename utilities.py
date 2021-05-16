@@ -127,9 +127,10 @@ class Geometry:
 
     @staticmethod
     def angle_between_vectors(v1, v2):
+        eps = 0.0000000001
         norm_prod = (np.linalg.norm(v1) * np.linalg.norm(v2))
-        if norm_prod < 0.0001: 
-            norm_prod = 0.0001
+        if norm_prod < eps: 
+            norm_prod = eps
         return np.arccos(np.min(np.max(np.dot(v1, v2) / norm_prod, -1), 1))
 
 
