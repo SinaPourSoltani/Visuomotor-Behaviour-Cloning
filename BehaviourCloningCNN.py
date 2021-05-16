@@ -177,7 +177,7 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
             else:
               logits = model(x1, x2)
 
-        logits = torch.as_tensor(logits)
+        
         loss = F.mse_loss(logits, y)
 
         if train:
@@ -355,8 +355,6 @@ class PokeNet(nn.Module):
             
         poke = self.head(x).cpu().detach().numpy()
         unit_poke = poke / (np.linalg.norm(poke) + 0.00001)
+        unit_poke = torch.as_tensor(unit_poke).cuda()
 
-        device = next(model.parameters()).device
-        unit_poke = unit_poke.to(device)
-        
         return unit_poke
