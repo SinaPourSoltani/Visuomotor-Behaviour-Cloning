@@ -273,8 +273,10 @@ def get_model(complex_mlp=False, is_stereo=False):
     model = PokeNet(complex_mlp=complex_mlp, is_stereo=is_stereo)
     try:
       model = model.cuda()
+      print("In here cuda")
     except:
       model = model.cpu()
+      print("In here cpu")
     return model
 
 def freeze_backbone(model, is_stereo=False):
@@ -346,5 +348,5 @@ class PokeNet(nn.Module):
             x = self.backbone(x1)
 
         poke = self.head(x)
-        unit_poke = poke / (torch.linalg.norm(poke) + 0.00001)
-        return unit_poke
+        #unit_poke = poke / (torch.linalg.norm(poke) + 0.00001)
+        return poke
