@@ -2,16 +2,22 @@ import sys
 import json
 from datetime import datetime
 from torchvision import transforms
-sys.path.append('Visuomotor-Behaviour-Cloning')
+#sys.path.append('Visuomotor-Behaviour-Cloning')
 from BehaviourCloningCNN import *
 
 # With Shadows
-data_link = "https://github.com/SinaPourSoltani/Visuomotor-Behaviour-Cloning/releases/download/v0.3/data.zip"
+#data_link = "https://github.com/SinaPourSoltani/Visuomotor-Behaviour-Cloning/releases/download/v0.3/data.zip"
 is_stereo = False
 
 augmentations = None
 
-load_data(data_link)
+
+# Get the current working directory
+cwd = os.getcwd()
+
+# Print the current working directory
+print("Current working directory: {0}".format(cwd))
+#load_data(data_link)
 train_loader, valid_loader, test_loader = get_data_loaders(*get_episodes(),transforms=augmentations, is_stereo=is_stereo, std_noise_poke_vec=None)
 model = get_model(is_stereo=is_stereo)
 
