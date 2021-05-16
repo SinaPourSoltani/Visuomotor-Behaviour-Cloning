@@ -176,7 +176,7 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
               logits = model(x)
             else:
               logits = model(x1, x2)
-
+        logits = torch.as_tensor(logits)
         loss = F.mse_loss(logits, y)
 
         if train:
