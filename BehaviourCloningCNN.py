@@ -298,7 +298,7 @@ def unfreeze_backbone(model, is_stereo=False):
     return model
 
 class PokeNet(nn.Module):
-    def __init__(self, is_stereo=False, p_dropout=0.):
+    def __init__(self, complex_mlp=False, is_stereo=False, p_dropout=0.):
         super().__init__()
         self.is_stereo = is_stereo
         self.backbone = torchvision.models.resnet18(pretrained=True)
@@ -307,20 +307,28 @@ class PokeNet(nn.Module):
         self.backbone_2 = torchvision.models.resnet18(pretrained=True)
         self.backbone_2.fc = nn.Identity()
 
-        self.head = nn.Sequential(
-          nn.Dropout(p_dropout),
-          nn.Linear(1024, 256) if self.is_stereo else nn.Linear(512, 256),
-          nn.ReLU(),
-          nn.Dropout(p_dropout*0.5),
-          nn.Linear(256, 3)
+        if complex_mlp:
+          self.head = nn.Sequential(
+            nn.Dropout(p_dropout),
+            nn.Linear(1024, 256) if self.is_stereo else nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Dropout(p_dropout*0.5),
+            nn.Linear(256, 3)
+            )
+        else:
+          self.head = nn.Sequential(
+            nn.Dropout(p_dropout),
+            nn.Linear(1024, 3) if self.is_stereo else nn.Linear(512, 3)
           )
+
         
         #print(self.head)
         with torch.no_grad():
           self.head[1].weight.fill_(0)
           self.head[1].bias.fill_(0)
-          self.head[4].weight.fill_(0)
-          self.head[4].bias.fill_(0)
+          if complex_mlp: 
+            self.head[4].weight.fill_(0)
+            self.head[4].bias.fill_(0)
 
     def forward(self, x1, x2=None):
         if self.is_stereo:
