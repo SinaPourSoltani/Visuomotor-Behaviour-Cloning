@@ -227,7 +227,9 @@ def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_deca
             #summary["Model name"] = filename;
             summary["Epochs"] = len(train_losses)
             summary["Train losses"] = train_losses
+            summary["Train deviation"] = train_accuracies
             summary["Valid losses"] = valid_losses
+            summary["Valid deviation"] = valid_accuracies
             summary["Is stereo"] = is_stereo
             summary["Learning rate"] = lr
 
