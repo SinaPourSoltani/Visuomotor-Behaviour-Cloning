@@ -216,6 +216,7 @@ def train(model, loader_train, loader_valid, lr=1e-3, max_epochs=30, weight_deca
         valid_accuracies.append(valid_acc)
 
         t.set_description(f'train_loss: {train_loss:.10f}, valid_loss: {valid_loss:.10f}')
+        print()
 
         if valid_acc > best_valid_accuracy:
             best_valid_accuracy = valid_acc

@@ -45,7 +45,7 @@ def main(args=None):
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_epoch30_new_baseline.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_epoch15_baseline_rm_norm.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
         #print(device)
