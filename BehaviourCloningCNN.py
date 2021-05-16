@@ -29,13 +29,12 @@ def load_data(data_link):
 
 class PokeDataset(Dataset):
   def __init__(self, csv_file_path, image_folder_path, episode_indeces, transforms=None, is_stereo=False, std_noise_poke_vec=None):
+
     self.image_folder_path = image_folder_path
     self.transforms = transforms
     self.is_stereo = is_stereo
     self.poke_frame = pd.read_csv(csv_file_path)
-    self.poke_frame = self.poke_frame.loc[self.poke_frame['episode'].isin(episode_indeces)]
-
-
+    self.poke_frame = self.poke_frame.loc[self.poke_frame['episode'].isin(list(map(int,episode_indeces)))]
     self.std_noise_poke_vec = std_noise_poke_vec
     self.transforms = transforms
 
@@ -267,17 +266,8 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
     plt.tight_layout()
     plt.show()
 
-def get_model(is_stereo=False):
-    '''
-    model = torchvision.models.resnet18(pretrained=True)
-    model.fc = nn.Linear(512, 3)
-        # The model has been trained on images with a resolution of 224x224
-    model = nn.Sequential(
-        nn.UpsamplingBilinear2d((224,224)),
-        model,
-    )
-    '''
-    model = PokeNet(is_stereo)
+def get_model(complex_mlp=False, is_stereo=False):
+    model = PokeNet(complex_mlp=complex_mlp, is_stereo=is_stereo)
     try:
       model = model.cuda()
     except:
@@ -321,8 +311,9 @@ class PokeNet(nn.Module):
         self.backbone = torchvision.models.resnet18(pretrained=True)
         self.backbone.fc = nn.Identity()
 
-        self.backbone_2 = torchvision.models.resnet18(pretrained=True)
-        self.backbone_2.fc = nn.Identity()
+        if is_stereo:
+            self.backbone_2 = torchvision.models.resnet18(pretrained=True)
+            self.backbone_2.fc = nn.Identity()
 
         if complex_mlp:
           self.head = nn.Sequential(
@@ -338,8 +329,6 @@ class PokeNet(nn.Module):
             nn.Linear(1024, 3) if self.is_stereo else nn.Linear(512, 3)
           )
 
-        
-        #print(self.head)
         with torch.no_grad():
           self.head[1].weight.fill_(0)
           self.head[1].bias.fill_(0)

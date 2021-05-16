@@ -45,7 +45,7 @@ def main(args=None):
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_Neps350.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_epoch15_baseline.pth"))#, map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
 
@@ -76,17 +76,17 @@ def main(args=None):
                     x = tf(img).unsqueeze_(0).to(device)
                     y = model(x)
 
-                #poke = y.cpu().detach().numpy().flatten()
-                #poke = Geometry.unit_vector(poke) * expert.step_size
-                #print(poke)
-                #tcp_pose = sim.robotArm.get_tcp_pose()
-                #poke_for_ori = expert.calculate_move(tcp_pose, state.item, state.goal)
+                poke = y.cpu().detach().numpy().flatten()
+                poke = Geometry.unit_vector(poke) * expert.step_size
+                print(poke)
+                tcp_pose = sim.robotArm.get_tcp_pose()
+                poke_for_ori = expert.calculate_move(tcp_pose, state.item, state.goal)
 
-                #joined = np.concatenate([poke, poke_for_ori[3:]]) # why??
+                joined = np.concatenate([poke, poke_for_ori[3:]]) # why??
 
 
-            #sim.set_robot_pose(*joined, mode="rel", useLimits=True)
-            sim.set_robot_pose(*poke, mode="rel", useLimits=True)
+            sim.set_robot_pose(*joined, mode="rel", useLimits=True)
+            #sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
 
             if expert.STATE == ON_GOAL:
