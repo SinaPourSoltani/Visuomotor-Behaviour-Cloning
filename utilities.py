@@ -130,7 +130,7 @@ class Geometry:
         norm_prod = (np.linalg.norm(v1) * np.linalg.norm(v2))
         if norm_prod < 0.0001: 
             norm_prod = 0.0001
-        return np.arccos(np.dot(v1, v2) / norm_prod)
+        return np.arccos(np.min(np.max(np.dot(v1, v2) / norm_prod, -1), 1))
 
 
     @staticmethod
