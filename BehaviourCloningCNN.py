@@ -35,6 +35,7 @@ class PokeDataset(Dataset):
     self.is_stereo = is_stereo
     self.poke_frame = pd.read_csv(csv_file_path)
     self.poke_frame = self.poke_frame.loc[self.poke_frame['episode'].isin(list(map(int,episode_indeces)))]
+    self.stepsize = 0.01
     self.std_noise_poke_vec = std_noise_poke_vec
     self.transforms = transforms
 
@@ -60,9 +61,11 @@ class PokeDataset(Dataset):
 
     stereo_offset = 1 if self.is_stereo else 0
     poke = self.poke_frame.iloc[idx, 1+stereo_offset : 4+stereo_offset] # TODO: update so matches with new csv format
+
+    poke = np.array([poke], dtype='float32')
+    poke = poke / self.stepsize
     if self.std_noise_poke_vec is not None:
           poke = add_noise_poke_vector(poke)
-    poke = np.array([poke], dtype='float32')
 
     sample = {'image': self.transforms(image)} if not self.is_stereo \
         else {'image_l': self.transforms(image_l), 'image_r': self.transforms(image_r)}
@@ -171,12 +174,12 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
         y = data['poke'].squeeze().to(device)
 
         with torch.set_grad_enabled(train):
-            if not is_stereo: 
+            if not is_stereo:
               logits = model(x)
             else:
               logits = model(x1, x2)
 
-        
+
         loss = F.mse_loss(logits, y)
 
         if train:
@@ -186,7 +189,7 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
 
         losses.append(loss.item())
         total += len(x) if not is_stereo else len(x1)
-        for vector_pred, vector_gt in zip(logits, y): 
+        for vector_pred, vector_gt in zip(logits, y):
           total_deviation += geo.angle_between_vectors(vector_pred.cpu().detach().numpy(), vector_gt.cpu().detach().numpy())
         #correct += correct_poke(y.cpu().detach().numpy(), logits.cpu().detach().numpy()) #(torch.argmax(logits, dim=1) == y).sum().item()
     return np.mean(losses), total_deviation / total
@@ -279,28 +282,26 @@ def freeze_backbone(model, is_stereo=False):
     backbone = list(model.named_children())[0][1]
     for idx,  (name, layer) in enumerate(backbone.named_children()):
         layer.requires_grad = False
-    backbone.eval()
 
-    if is_stereo: 
+    if is_stereo:
         backbone2 = list(model.named_children())[1][1]
         for idx,  (name, layer) in enumerate(backbone2.named_children()):
           layer.requires_grad = False
-        backbone2.eval()
 
     return model
 
 def unfreeze_backbone(model, is_stereo=False):
     backbone = list(model.named_children())[0][1]
-    
-    for idx,  (name, layer) in enumerate(backbone.named_children()):
-        layer.requires_grad = True
-    backbone.train()
 
-    if is_stereo: 
+    for idx,  (name, layer) in enumerate(backbone.named_children()):
+      if idx > 5: #Only unfreeze above Residual layer 2 and above.
+        layer.requires_grad = True
+
+    if is_stereo:
       backbone2 = list(model.named_children())[1][1]
       for idx,  (name, layer) in enumerate(backbone2.named_children()):
-        layer.requires_grad = True
-      backbone2.train()
+        if idx > 5: #Only unfreeze above Residual layer 2 and above.
+          layer.requires_grad = True
 
     return model
 
@@ -332,7 +333,7 @@ class PokeNet(nn.Module):
         with torch.no_grad():
           self.head[1].weight.fill_(0)
           self.head[1].bias.fill_(0)
-          if complex_mlp: 
+          if complex_mlp:
             self.head[4].weight.fill_(0)
             self.head[4].bias.fill_(0)
 
@@ -340,10 +341,10 @@ class PokeNet(nn.Module):
         if self.is_stereo:
             x1 = self.backbone(x1)
             x2 = self.backbone_2(x2)
-            x = torch.cat((x1, x2), dim=1) 
+            x = torch.cat((x1, x2), dim=1)
         else:
             x = self.backbone(x1)
-            
+
         poke = self.head(x)
         unit_poke = poke / (torch.linalg.norm(poke) + 0.00001)
         return unit_poke
