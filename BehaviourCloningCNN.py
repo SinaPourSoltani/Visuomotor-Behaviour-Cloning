@@ -289,13 +289,11 @@ def freeze_backbone(model, is_stereo=False):
     backbone = list(model.named_children())[0][1]
     for idx,  (name, layer) in enumerate(backbone.named_children()):
         layer.requires_grad = False
-    backbone.eval()
 
     if is_stereo: 
         backbone2 = list(model.named_children())[1][1]
         for idx,  (name, layer) in enumerate(backbone2.named_children()):
           layer.requires_grad = False
-        backbone2.eval()
 
     return model
 
@@ -303,14 +301,14 @@ def unfreeze_backbone(model, is_stereo=False):
     backbone = list(model.named_children())[0][1]
     
     for idx,  (name, layer) in enumerate(backbone.named_children()):
+      if idx > 5: #Only unfreeze above Residual layer 2 and above.  
         layer.requires_grad = True
-    backbone.train()
 
     if is_stereo: 
       backbone2 = list(model.named_children())[1][1]
       for idx,  (name, layer) in enumerate(backbone2.named_children()):
-        layer.requires_grad = True
-      backbone2.train()
+        if idx > 5: #Only unfreeze above Residual layer 2 and above.  
+          layer.requires_grad = True
 
     return model
 
