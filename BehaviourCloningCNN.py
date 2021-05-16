@@ -353,8 +353,6 @@ class PokeNet(nn.Module):
         else:
             x = self.backbone(x1)
             
-        poke = self.head(x).cpu().detach().numpy()
-        unit_poke = poke / (np.linalg.norm(poke) + 0.00001)
-        unit_poke = torch.as_tensor(unit_poke).cuda()
-
+        poke = self.head(x)
+        unit_poke = poke / (torch.linalg.norm(poke) + 0.00001)
         return unit_poke
