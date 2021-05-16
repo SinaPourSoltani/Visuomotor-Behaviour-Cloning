@@ -169,12 +169,7 @@ def one_epoch(model, data_loader, opt=None, is_stereo=False):
             x2 = data['image_r'].to(device)
         else:
             x = data['image'].to(device)
-            Image.fromarray(x.cpu().detach().numpy()[0]).show('titel')
-            input()
         y = data['poke'].squeeze().to(device)
-
-        Image.fromarray(x1.cpu().detach().numpy()[0]).show('titel')
-        input()
 
         with torch.set_grad_enabled(train):
             if not is_stereo: 
