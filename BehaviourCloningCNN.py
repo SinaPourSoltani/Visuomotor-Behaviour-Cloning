@@ -267,20 +267,34 @@ def get_model(is_stereo=False):
       model = model.cpu()
     return model
 
-def freeze_backbone(model):
+def freeze_backbone(model, is_stereo=False):
+
     backbone = list(model.named_children())[0][1]
-    #print(backbone)
     for idx,  (name, layer) in enumerate(backbone.named_children()):
         layer.requires_grad = False
-    model.eval()
+    backbone.eval()
+
+    if is_stereo: 
+        backbone2 = list(model.named_children())[1][1]
+        for idx,  (name, layer) in enumerate(backbone2.named_children()):
+          layer.requires_grad = False
+        backbone2.eval()
+
     return model
 
-def unfreeze_backbone(model):
+def unfreeze_backbone(model, is_stereo=False):
     backbone = list(model.named_children())[0][1]
-    #print(backbone)
+    
     for idx,  (name, layer) in enumerate(backbone.named_children()):
         layer.requires_grad = True
-    model.train()
+    backbone.train()
+
+    if is_stereo: 
+      backbone2 = list(model.named_children())[1][1]
+      for idx,  (name, layer) in enumerate(backbone2.named_children()):
+        layer.requires_grad = True
+      backbone2.train()
+
     return model
 
 class PokeNet(nn.Module):
