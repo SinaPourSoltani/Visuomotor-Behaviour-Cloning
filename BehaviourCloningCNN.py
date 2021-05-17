@@ -270,8 +270,8 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
     plt.tight_layout()
     plt.show()
 
-def get_model(complex_mlp=False, is_stereo=False):
-    model = PokeNet(complex_mlp=complex_mlp, is_stereo=is_stereo)
+def get_model(complex_mlp=False, is_stereo=False, p_dropout=0):
+    model = PokeNet(complex_mlp=complex_mlp, is_stereo=is_stereo, p_dropout=p_dropout)
     try:
       model = model.cuda()
       print("In here cuda")
