@@ -270,8 +270,8 @@ def plot_history(train_losses, train_accuracies, valid_losses, valid_accuracies)
     plt.tight_layout()
     plt.show()
 
-def get_model(complex_mlp=False, is_stereo=False, p_dropout=0):
-    model = PokeNet(complex_mlp=complex_mlp, is_stereo=is_stereo, p_dropout=p_dropout)
+def get_model(normalise_poke_vec=False, complex_mlp=False, is_stereo=False, p_dropout=0):
+    model = PokeNet(normalise_poke_vec=normalise_poke_vec, complex_mlp=complex_mlp, is_stereo=is_stereo, p_dropout=p_dropout)
     try:
       model = model.cuda()
       print("In here cuda")
@@ -309,8 +309,9 @@ def unfreeze_backbone(model, is_stereo=False):
     return model
 
 class PokeNet(nn.Module):
-    def __init__(self, complex_mlp=False, is_stereo=False, p_dropout=0.):
+    def __init__(self, normalise_poke_vec=False, complex_mlp=False, is_stereo=False, p_dropout=0.):
         super().__init__()
+        self.normalise_poke_vec = normalise_poke_vec
         self.is_stereo = is_stereo
         self.backbone = torchvision.models.resnet18(pretrained=True)
         self.backbone.fc = nn.Identity()
@@ -349,5 +350,7 @@ class PokeNet(nn.Module):
             x = self.backbone(x1)
 
         poke = self.head(x)
-        #unit_poke = poke / (torch.linalg.norm(poke) + 0.00001)
+        if self.normalise_poke_vec:
+            poke = poke / (torch.linalg.norm(poke) + 0.00001)
+
         return poke
