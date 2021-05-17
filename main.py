@@ -41,15 +41,14 @@ def main(args=None):
     expert = Expert(args.verbose)
     dataset = Dataset(args.verbose, args.stereo_images, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode, start_idx=args.start_idx)
 
-    sim.set_robot_pose(-0.25, -0.15, 0.775)
-
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_epoch15_baseline_rm_norm.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_epoch5_baseline_2.0.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
         #print(device)
-
+    while True: 
+        pass
     for _ in range(args.episodes):
         for _ in range(args.MaxSteps):
             state = sim.get_state()
@@ -58,6 +57,7 @@ def main(args=None):
                 tcp_pose = sim.robotArm.get_tcp_pose()
                 #sim.draw_coordinate_frame(*tcp_pose)
                 poke = expert.calculate_move(tcp_pose, state.item, state.goal)
+                print("exportPoke")
                 dataset.add(state.image, poke)
             else:
 
