@@ -47,8 +47,7 @@ def main(args=None):
         model.eval()
         device = next(model.parameters()).device
         #print(device)
-    while True: 
-        pass
+
     for _ in range(args.episodes):
         for _ in range(args.MaxSteps):
             state = sim.get_state()
