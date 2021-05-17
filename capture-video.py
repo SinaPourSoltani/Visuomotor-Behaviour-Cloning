@@ -32,6 +32,8 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
+    img_list = []
+
     args = parse_args(args)
     if args.start_idx != 0:
         args.file_mode = 'a'
