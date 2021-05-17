@@ -190,3 +190,10 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,linux,windows,pycharm
 Untitled.ipynb
+training_base_norm/frozen_results.png
+training_base_norm/summary_baseline_2_0_unfrozen_from_5
+training_base_norm/summary_baseline_2.0
+training_base_norm/unfrozen_results.png
+training_base_norm/summary_norm_baseline_2_0_unfrozen_from_5
+.gitignore
+training_base_norm/summary_norm_baseline_2.0
