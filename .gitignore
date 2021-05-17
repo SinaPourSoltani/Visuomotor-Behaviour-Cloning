@@ -3,6 +3,9 @@
 **/.idea
 **/data
 **.pth
+**.zip
+**.csv
+**.ipynb_checkpoints/
 
 **/.vscode
 
