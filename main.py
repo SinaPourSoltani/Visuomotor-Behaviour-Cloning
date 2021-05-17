@@ -44,12 +44,13 @@ def main(args=None):
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_epoch5_baseline_2.0.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_epoch10_baseline_2_0_unfrozen_from_5.pth"))#, map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
         #print(device)
 
-    for _ in tqdm(range(args.episodes)):
+    t = tqdm(range(args.episodes))
+    for episode in t:
         for _ in range(args.MaxSteps):
             state = sim.get_state()
 
@@ -93,6 +94,7 @@ def main(args=None):
             if expert.STATE == ON_GOAL:
                 succes += 1
                 break
+        t.set_description(f'Succes: {succes} | Succes Rate: {succes / (episode + 1):.4f}')
 
         dataset.next_episode()
         sim.reset_environment()
