@@ -37,19 +37,15 @@ def main(args=None):
     args = parse_args(args)
     if args.start_idx != 0:
         args.file_mode = 'a'
+
     sim = Simulation(args.verbose, args.stereo_images)
-    succes = 0
-  
-    print("test:", args.test)
     expert = Expert(args.verbose)
-    dataset = Dataset(args.verbose, args.stereo_images, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode, start_idx=args.start_idx)
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
         model.load_state_dict(torch.load("ResNet18_epoch5_baseline_2.0.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
-        #print(device)
 
     for _ in tqdm(range(args.episodes)):
         for _ in range(args.MaxSteps):
@@ -57,36 +53,27 @@ def main(args=None):
 
             if not args.test:
                 tcp_pose = sim.robotArm.get_tcp_pose()
-                #sim.draw_coordinate_frame(*tcp_pose)
                 poke = expert.calculate_move(tcp_pose, state.item, state.goal)
-                print("exportPoke")
-                dataset.add(state.image, poke)
             else:
-
                 tf = torchvision.transforms.Compose([
                         torchvision.transforms.ToTensor(),
-                        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-
+                        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                ])
                 if args.stereo_images:
                     img1 = state.image[0].convert("RGB")
                     img2 = state.image[1].convert("RGB")
                     x1 = tf(img1).unsqueeze_(0).to(device)
                     x2 = tf(img2).unsqueeze_(0).to(device)
                     y = model(x1, x2)
-
                 else:
                     img = state.image.convert("RGB")
                     x = tf(img).unsqueeze_(0).to(device)
                     y = model(x)
-
                 poke = y.cpu().detach().numpy().flatten()
                 poke = Geometry.unit_vector(poke) * expert.step_size
-                #print(poke)
                 tcp_pose = sim.robotArm.get_tcp_pose()
                 poke_for_ori = expert.calculate_move(tcp_pose, state.item, state.goal)
-
-                joined = np.concatenate([poke, poke_for_ori[3:]]) # why??
-
+                joined = np.concatenate([poke, poke_for_ori[3:]])
 
             sim.set_robot_pose(*joined, mode="rel", useLimits=True)
             #sim.set_robot_pose(*poke, mode="rel", useLimits=True)
@@ -96,18 +83,10 @@ def main(args=None):
                 succes += 1
                 break
 
-        dataset.next_episode()
         sim.reset_environment()
 
-
-
-    #dataset.next_episode()
-    print("Succes: {} | Succes rate: {:.4f}%".format(succes, 100*succes/args.episodes))
     print("Done!\nTerminating...")
-
     sim.terminate()
-
-
 
 if __name__ == '__main__':
     main()
