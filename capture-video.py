@@ -2,7 +2,7 @@ import torchvision.transforms
 
 from simulation import Simulation
 from expert import *
-from utilities import Dataset, Geometry
+from utilities import Dataset, Geometry, get_concat_h, get_concat_v
 from BehaviourCloningCNN import get_model
 from tqdm import tqdm
 import torch
@@ -27,6 +27,8 @@ def parse_args(args):
     parser.add_argument('--stereo_images', help="Set whether to use a stereo camera setup or a mono setup", default=False, type=bool)
 
     return parser.parse_args(args)
+
+
 
 def main(args=None):
     if args is None:
