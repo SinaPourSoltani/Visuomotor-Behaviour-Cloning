@@ -2,7 +2,7 @@ import torchvision.transforms
 
 from simulation import Simulation
 from expert import *
-from utilities import Dataset, Geometry, get_concat_h, get_concat_v
+from utilities import Dataset, Geometry, get_concat_h_blank, get_concat_v_blank
 from BehaviourCloningCNN import get_model
 from tqdm import tqdm
 import torch
