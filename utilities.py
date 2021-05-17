@@ -3,8 +3,41 @@ from dataclasses import dataclass
 from datetime import datetime
 import numpy as np
 import os
+import csv
+import shutil
 from os import path
 
+def combine_csv(source_csv, dest_csv):
+    source_data_file = open(source_csv, 'r')
+    reader = csv.reader(source_data_file)
+    header = next(reader)
+    data = {}
+
+    with open(dest_csv, 'a') as dst_file:
+        with open(source_csv, 'r') as src_file:
+            src_file.__next__()
+            for line in src_file.readlines():
+                dst_file.write(line)
+
+def move_to_folder(source,dest,copy=True):
+    sub_folders = next(os.walk(source))[1]
+
+    for sf in sub_folders:
+        source_sf_path = os.path.join(source,sf)
+        source_sf_folder = os.listdir(source_sf_path)
+
+        dest_sf_path = os.path.join(dest,sf)
+        os.mkdir(dest_sf_path)
+
+
+        dest_sf_folder = source_sf_folder
+
+        for file in dest_sf_folder:
+            file_path = os.path.join(source_sf_path,file)
+            if copy:
+                shutil.copy2(file_path,dest_sf_path)
+            else:
+                shutil.move(file_path,dest_sf_path)
 
 #https://note.nkmk.me/en/python-pillow-concat-images/
 def get_concat_h_blank(im1, im2, color=(0, 0, 0)):

@@ -12,3 +12,6 @@ numpy-quaternion
 datetime
 pil_video
 opencv-python
+numba
+scipy
+pyfastcopy
