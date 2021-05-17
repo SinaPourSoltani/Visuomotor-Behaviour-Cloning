@@ -254,8 +254,10 @@ def get_model(is_stereo=False):
     '''
     model = PokeNet(is_stereo)
     try:
+      print("Using Cuda Cores")
       model = model.cuda()
     except:
+      print("Using cpu :(")
       model = model.cpu()
     return model
 
