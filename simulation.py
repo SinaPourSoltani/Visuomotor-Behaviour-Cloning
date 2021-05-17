@@ -122,8 +122,11 @@ class Simulation:
 
         self.update_state()
 
-    def grab_image(self, view_matrix, proj_matrix, show=False):
-        (_, _, px, _, _) = p.getCameraImage(self.px_width,self.px_height, view_matrix, proj_matrix, shadow=True, renderer=p.ER_BULLET_HARDWARE_OPENGL)
+    def grab_image(self, view_matrix, proj_matrix, show=False, px_width=None, px_height=None):
+        if px_width is None and px_height is None:
+            px_width = self.px_width
+            px_height = self.px_height
+        (_, _, px, _, _) = p.getCameraImage(px_width, px_height, view_matrix, proj_matrix, shadow=True, renderer=p.ER_BULLET_HARDWARE_OPENGL)
         img_data = np.array(px)
         img = Image.fromarray(img_data, 'RGBA').convert('RGB')
         if show:

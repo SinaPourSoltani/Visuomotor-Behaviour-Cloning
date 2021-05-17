@@ -10,3 +10,5 @@ torchvision
 matplotlib
 numpy-quaternion
 datetime
+pil_video
+opencv-python

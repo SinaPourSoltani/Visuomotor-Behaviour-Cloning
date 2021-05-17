@@ -10,7 +10,7 @@ import numpy as np
 import os
 import sys
 import argparse
-from PIL import Image
+import cv2
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="Simple Script for generating training examples for a visuomotor task on a 2D-plane")
@@ -29,12 +29,17 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
     img_list = []
+
+    bird_view_matrix = p.computeViewMatrix([1.5, -1.5, 2], [0, 0, 0.8], [0, 0, 1])
+    bird_proj_matrix = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
+    bird_px_width = 448
+    bird_px_height = 448
+
 
     args = parse_args(args)
     if args.start_idx != 0:
@@ -45,7 +50,7 @@ def main(args=None):
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_epoch5_baseline_2.0.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_epoch10_baseline_2_0_unfrozen_from_5.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
 
@@ -53,8 +58,11 @@ def main(args=None):
         for _ in range(args.MaxSteps):
             state = sim.get_state()
 
+            top_part_of_image = None
+
             if not args.test:
                 tcp_pose = sim.robotArm.get_tcp_pose()
+                top_part_of_image = state.image[0].convert('RGB')
                 poke = expert.calculate_move(tcp_pose, state.item, state.goal)
             else:
                 tf = torchvision.transforms.Compose([
@@ -67,9 +75,11 @@ def main(args=None):
                     x1 = tf(img1).unsqueeze_(0).to(device)
                     x2 = tf(img2).unsqueeze_(0).to(device)
                     y = model(x1, x2)
+                    top_part_of_image = get_concat_h_blank(img1, img2)
                 else:
                     img = state.image.convert("RGB")
                     x = tf(img).unsqueeze_(0).to(device)
+                    top_part_of_image = img
                     y = model(x)
                 poke = y.cpu().detach().numpy().flatten()
                 poke = Geometry.unit_vector(poke) * expert.step_size
@@ -77,12 +87,16 @@ def main(args=None):
                 poke_for_ori = expert.calculate_move(tcp_pose, state.item, state.goal)
                 joined = np.concatenate([poke, poke_for_ori[3:]])
 
-            sim.set_robot_pose(*joined, mode="rel", useLimits=True)
-            #sim.set_robot_pose(*poke, mode="rel", useLimits=True)
+            bird_eye_view = sim.grab_image(bird_view_matrix, bird_proj_matrix, False, bird_px_width, bird_px_height)
+            image_collage = get_concat_v_blank(top_part_of_image, bird_eye_view)
+            img_list.append(image_collage)
+
+
+            #sim.set_robot_pose(*joined, mode="rel", useLimits=True)
+            sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
 
             if expert.STATE == ON_GOAL:
-                succes += 1
                 break
 
         sim.reset_environment()
