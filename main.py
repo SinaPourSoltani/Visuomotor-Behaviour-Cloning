@@ -25,6 +25,7 @@ def parse_args(args):
     parser.add_argument('--MaxSteps', help="Maximum number of step in one episode", default=500, type=int)
     parser.add_argument('--test', help="Set whether to gather data with the expert or test with the model",default=False, type=bool)
     parser.add_argument('--stereo_images', help="Set whether to use a stereo camera setup or a mono setup", default=False, type=bool)
+    parser.add_argument('--model_name', help="Name of the model to be used", type=str)
 
     return parser.parse_args(args)
 
@@ -44,7 +45,7 @@ def main(args=None):
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_epoch10_baseline_2_0_unfrozen_from_5.pth"))#, map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load(args.model_name))#, map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
         #print(device)
