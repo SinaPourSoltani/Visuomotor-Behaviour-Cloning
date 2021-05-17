@@ -54,8 +54,8 @@ def main(args=None):
         model.eval()
         device = next(model.parameters()).device
 
-    for _ in tqdm(range(args.episodes)):
-        for _ in range(args.MaxSteps):
+    for k in tqdm(range(args.episodes)):
+        for i in range(args.MaxSteps):
             state = sim.get_state()
 
             top_part_of_image = None
@@ -91,7 +91,6 @@ def main(args=None):
             image_collage = get_concat_v_blank(top_part_of_image, bird_eye_view)
             img_list.append(image_collage)
 
-
             #sim.set_robot_pose(*joined, mode="rel", useLimits=True)
             sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
@@ -100,6 +99,12 @@ def main(args=None):
                 break
 
         sim.reset_environment()
+    
+    out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 15, (448, 672))
+
+    for i in range(len(img_list)):
+        out.write(np.array(img_list[i])[:,:,::-1])
+    out.release()
 
     print("Done!\nTerminating...")
     sim.terminate()
