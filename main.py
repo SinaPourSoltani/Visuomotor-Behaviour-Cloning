@@ -26,6 +26,7 @@ def parse_args(args):
     parser.add_argument('--test', help="Set whether to gather data with the expert or test with the model",default=False, type=bool)
     parser.add_argument('--stereo_images', help="Set whether to use a stereo camera setup or a mono setup", default=False, type=bool)
     parser.add_argument('--model_name', help="Name of the model to be used", type=str)
+    parser.add_argument('--complex_mlp', help="Whether to use a complex model", default=False, type=bool)
 
     return parser.parse_args(args)
 
@@ -44,7 +45,8 @@ def main(args=None):
     dataset = Dataset(args.verbose, args.stereo_images, args.data_file_name, image_path=args.image_path, data_file_path=args.data_file_path, filemode=args.file_mode, start_idx=args.start_idx)
 
     if args.test:
-        model = get_model(is_stereo=args.stereo_images)
+        #def get_model(normalise_poke_vec=False, complex_mlp=False, is_stereo=False, p_dropout=0):
+        model = get_model(complex_mlp=args.complex_mlp, is_stereo=args.stereo_images)
         model.load_state_dict(torch.load(args.model_name))#, map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
@@ -59,8 +61,8 @@ def main(args=None):
                 tcp_pose = sim.robotArm.get_tcp_pose()
                 #sim.draw_coordinate_frame(*tcp_pose)
                 poke = expert.calculate_move(tcp_pose, state.item, state.goal)
-                print("exportPoke")
-                dataset.add(state.image, poke)
+                #print("exportPoke")
+                #dataset.add(state.image, poke)
             else:
 
                 tf = torchvision.transforms.Compose([
