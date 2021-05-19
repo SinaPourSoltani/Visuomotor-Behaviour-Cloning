@@ -89,11 +89,11 @@ def main(args=None):
 
             bird_eye_view = sim.grab_image(bird_view_matrix, bird_proj_matrix, False, bird_px_width, bird_px_height)
             image_collage = get_concat_v_blank(top_part_of_image, bird_eye_view)
-            #img_list.append(image_collage)
-            img_list.append(bird_eye_view)
+            img_list.append(image_collage)
+            #img_list.append(bird_eye_view)
 
-            #sim.set_robot_pose(*joined, mode="rel", useLimits=True)
-            sim.set_robot_pose(*poke, mode="rel", useLimits=True)
+            sim.set_robot_pose(*joined, mode="rel", useLimits=True)
+            #sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
 
             if expert.STATE == ON_GOAL:
