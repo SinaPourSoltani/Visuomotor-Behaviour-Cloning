@@ -37,8 +37,8 @@ def main(args=None):
 
     bird_view_matrix = p.computeViewMatrix([1.5, -1.5, 2], [0, 0, 0.8], [0, 0, 1])
     bird_proj_matrix = p.computeProjectionMatrixFOV(fov=45.0, aspect=1.0, nearVal=0.1, farVal=5)
-    bird_px_width = 448
-    bird_px_height = 448
+    bird_px_width = 1920
+    bird_px_height = 1080
 
 
     args = parse_args(args)
@@ -50,7 +50,7 @@ def main(args=None):
 
     if args.test:
         model = get_model(is_stereo=args.stereo_images)
-        model.load_state_dict(torch.load("ResNet18_epoch10_baseline_2_0_unfrozen_from_5.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load("ResNet18_epoch10_augment_noise_unfrozen_from_15.pth", map_location=torch.device('cpu')))
         model.eval()
         device = next(model.parameters()).device
 
@@ -62,7 +62,7 @@ def main(args=None):
 
             if not args.test:
                 tcp_pose = sim.robotArm.get_tcp_pose()
-                top_part_of_image = state.image[0].convert('RGB')
+                top_part_of_image = state.image.convert('RGB')
                 poke = expert.calculate_move(tcp_pose, state.item, state.goal)
             else:
                 tf = torchvision.transforms.Compose([
@@ -90,9 +90,10 @@ def main(args=None):
             bird_eye_view = sim.grab_image(bird_view_matrix, bird_proj_matrix, False, bird_px_width, bird_px_height)
             image_collage = get_concat_v_blank(top_part_of_image, bird_eye_view)
             img_list.append(image_collage)
+            #img_list.append(bird_eye_view)
 
-            #sim.set_robot_pose(*joined, mode="rel", useLimits=True)
-            sim.set_robot_pose(*poke, mode="rel", useLimits=True)
+            sim.set_robot_pose(*joined, mode="rel", useLimits=True)
+            #sim.set_robot_pose(*poke, mode="rel", useLimits=True)
             sim.step(False)
 
             if expert.STATE == ON_GOAL:
@@ -100,7 +101,7 @@ def main(args=None):
 
         sim.reset_environment()
     
-    out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 15, (448, 672))
+    out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 60, (1920, 1080))
 
     for i in range(len(img_list)):
         out.write(np.array(img_list[i])[:,:,::-1])
