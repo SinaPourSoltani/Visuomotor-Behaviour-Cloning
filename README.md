@@ -2,6 +2,8 @@
 
 This project aims is to investigate the concepts behind Visuomotor and Behaviour Cloning. Visuo-motor addresses the problem of relating a visual input and a control signal while Behaviour Cloningis used to developed control strategies based on expert demonstrations. The inspiration for this project is taken from the paper *Self-Supervised Correspondence in Visuomotor Policy Learning* by Florence et al. [[1]](#1). We also use ResNet18 [[2]](#2). The UR5 URDF-model is from [sholtodouglas](https://github.com/sholtodouglas/ur5pybullet/tree/master/urdf).   
 
+The project report, `Visuomotor-Behaviour-Cloning.pdf`, details the findings of the project.
+
 The best stereo model accomplishing the goal of pushing the object (red lego) to the goal position (green plate) using only stereo images as input to the neural network:
 
 
