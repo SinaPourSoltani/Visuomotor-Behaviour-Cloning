@@ -3,6 +3,8 @@
 This project aims is to investigate the concepts behind Visuomotor and Behaviour Cloning. Visuo-motor addresses the problem of relating a visual input and a control signal while Behaviour Cloningis used to developed control strategies based on expert demonstrations. The inspiration for this project is taken from the paper *Self-Supervised Correspondence in Visuomotor Policy Learning* by Florence et al. [[1]](#1). We also use ResNet18 [[2]](#2). The UR5 URDF-model is from [sholtodouglas](https://github.com/sholtodouglas/ur5pybullet/tree/master/urdf).   
 
 The best stereo model accomplishing the goal of pushing the object (red lego) to the goal position (green plate) using only stereo images as input to the neural network:
+
+
 ![Best Stereo Model Results](stereo_model_best_demo.gif)
 
 ## Setup
@@ -26,7 +28,7 @@ Either use the data provided in [releases](https://github.com/SinaPourSoltani/Vi
 
 To collect data for training, run main.py with flags `--episodes`, `--MaxSteps` and `--stereo_images` to decide the number of episodes to collect data from, the maximum amount of steps in an episode and whether to collect images from a monocular setup or stereo setup, e.g.
 
-```python
+```sh
 python3 main.py --episodes 500 --MaxSteps 250 --stereo_images True
 ```
 
@@ -43,7 +45,7 @@ The provided notebook `Behaviour_Cloning_CNN.ipynb` can be used for training.
 ## Testing
 To test models run main.py with flags `--episodes`, `--MaxSteps`, `--stereo_images`, `--test` and `--model_name`, e.g.
 
-```python
+```sh
 python3 main.py --episodes 500 --MaxSteps 250 --stereo_images True --test True --model_name ResNet18_epoch10_stereo_augment_unfrozen_from_15.pth
 ```
 
